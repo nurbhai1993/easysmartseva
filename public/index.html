@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartSeva Connect | Official</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --deep-green: #004d31;
+            --smart-yellow: #ffdb05;
+        }
+
+        .bg-smart-green { background-color: var(--deep-green); }
+        .text-smart-yellow { color: var(--smart-yellow); }
+        .bg-smart-yellow { background-color: var(--smart-yellow); }
+        
+        /* Smooth Scroll & Transitions */
+        html { scroll-behavior: smooth; }
+        
+        /* Image responsiveness for all screens */
+        img { max-width: 100%; height: auto; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: var(--deep-green); }
+
+        /* Prevent horizontal scroll on mobile */
+        body { overflow-x: hidden; width: 100%; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <header class="sticky top-0 z-50 shadow-md">
+        <div class="bg-smart-green text-white p-2 flex items-center justify-between gap-2 md:gap-4 px-2 md:px-8">
+            
+            <div onclick="location.href='index.html'" class="flex items-center gap-2 cursor-pointer border border-transparent hover:border-white p-1 rounded-sm shrink-0">
+                <div class="bg-white p-1 rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center overflow-hidden border-2 border-smart-yellow">
+                    <img src="assets/images/logo.png" alt="SmartSeva" class="object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1063/1063376.png'">
+                </div>
+                <div class="leading-none text-left hidden xs:block">
+                    <h1 class="text-sm md:text-xl font-bold uppercase tracking-tight">SmartSeva</h1>
+                    <p class="text-[8px] md:text-[10px] text-smart-yellow font-bold tracking-[1px] md:tracking-[3px]">CONNECT</p>
+                </div>
+            </div>
+
+            <div class="flex flex-grow max-w-2xl h-9 md:h-10">
+                <input type="text" placeholder="সার্ভিস খুঁজুন..." class="w-full px-3 md:px-4 text-xs md:text-sm text-black outline-none focus:ring-2 focus:ring-yellow-500 rounded-l-md">
+                <button class="bg-smart-yellow px-3 md:px-5 rounded-r-md text-black hover:bg-yellow-500 transition">
+                    <i class="fa-solid fa-magnifying-glass font-bold text-xs md:text-base"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 md:gap-4 text-sm shrink-0">
+                <div class="hidden lg:block border border-transparent hover:border-white p-1 cursor-pointer">
+                    <p class="text-[10px]">Hello, User</p>
+                    <p class="font-bold text-xs text-white">Account</p>
+                </div>
+                <a href="pages/login.html" class="bg-smart-yellow text-black font-black px-3 md:px-6 py-1.5 rounded-sm hover:shadow-lg transition text-[10px] md:text-sm uppercase">
+                    Login </a>
+                </button>
+            </div>
+        </div>
+
+        <nav class="bg-[#003d27] text-white flex items-center gap-4 md:gap-6 px-4 md:px-8 py-2 text-[10px] md:text-xs overflow-x-auto whitespace-nowrap scrollbar-hide">
+            <div class="font-bold flex items-center gap-1 cursor-pointer hover:text-smart-yellow"><i class="fa-solid fa-bars"></i> ALL</div>
+            <a href="index.html" class="hover:text-smart-yellow uppercase">Home</a>
+            <a href="service/booking.html" class="hover:text-smart-yellow uppercase">Services</a>
+            <a href="service/status.html" class="hover:text-smart-yellow uppercase">Track Booking</a>
+            <a href="#" class="hover:text-smart-yellow uppercase">Earn & Learn</a>
+            <a href="service/specialist.html" class="hover:text-smart-yellow uppercase">Become a Partner</a>
+            <a href="ssdoc/aboutus.html" class="hover:text-smart-yellow uppercase">About Us</a>
+            <a href="#" class="hover:text-smart-yellow uppercase text-smart-yellow font-bold">Prime</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="relative h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] bg-smart-green overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1600&q=80" alt="Banner" class="w-full h-full object-cover opacity-40">
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+                <h2 class="text-white text-2xl sm:text-4xl md:text-6xl font-black mb-3 md:mb-4 uppercase leading-tight">এক্সপার্ট সার্ভিস এখন <br class="md:hidden"> আপনার দরজায়</h2>
+                <p class="text-smart-yellow text-xs sm:text-base md:text-xl font-bold tracking-[2px] md:tracking-[3px] italic">দালালমুক্ত ও স্বচ্ছ সেবার একমাত্র নির্ভরযোগ্য মাধ্যম</p>
+                <button class="mt-4 md:mt-8 bg-smart-yellow text-black px-6 md:px-10 py-2 md:py-4 font-black rounded-sm hover:scale-105 transition uppercase text-xs md:text-sm shadow-2xl">বুকিং করুন (Book Now)</button>
+            </div>
+        </div>
+
+        <section class="max-w-7xl mx-auto px-4 -mt-10 relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="bg-white p-6 rounded shadow-xl border-b-4 border-smart-green hover:translate-y-[-5px] transition duration-300">
+                <i class="fa-solid fa-shield-heart text-3xl text-smart-green mb-3"></i>
+                <h3 class="font-bold text-base md:text-lg uppercase mb-2">Our Mission</h3>
+                <p class="text-xs md:text-sm text-gray-600">দালালদের দৌরাত্ম্য বন্ধ করে সরাসরি বিশেষজ্ঞ এবং সাধারণ মানুষের মধ্যে সংযোগ স্থাপন করা।</p>
+            </div>
+            <div class="bg-white p-6 rounded shadow-xl border-b-4 border-smart-yellow hover:translate-y-[-5px] transition duration-300">
+                <i class="fa-solid fa-users text-3xl text-smart-yellow mb-3"></i>
+                <h3 class="font-bold text-base md:text-lg uppercase mb-2">Refer & Earn</h3>
+                <p class="text-xs md:text-sm text-gray-600">আমাদের সার্ভিস রেফার করার মাধ্যমে সাধারণ মানুষ ঘরে বসেই আয়ের সুযোগ পাবেন।</p>
+            </div>
+            <div class="bg-white p-6 rounded shadow-xl border-b-4 border-smart-green hover:translate-y-[-5px] transition duration-300 sm:col-span-2 md:col-span-1">
+                <i class="fa-solid fa-clock-rotate-left text-3xl text-smart-green mb-3"></i>
+                <h3 class="font-bold text-base md:text-lg uppercase mb-2">24/7 Support</h3>
+                <p class="text-xs md:text-sm text-gray-600">যেকোনো অভিযোগ বা পরামর্শের জন্য আমাদের লোকাল সাপোর্ট টিম সবসময় আপনার পাশে আছে।</p>
+            </div>
+        </section>
+
+        <section class="max-w-7xl mx-auto px-4 py-16">
+            <h2 class="text-xl md:text-2xl font-black mb-8 border-l-8 border-smart-green pl-4 uppercase italic">Top Services (সেবাসমূহ)</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div class="bg-white p-6 text-center rounded hover:shadow-2xl cursor-pointer transition-all border border-gray-100 group">
+                    <i class="fa-solid fa-user-md text-3xl md:text-4xl text-blue-600 mb-3 group-hover:scale-110 transition"></i>
+                    <p class="text-xs md:text-sm font-black uppercase">Doctor Serial</p>
+                    <p class="text-[9px] text-gray-400 mt-1">ডাক্তার সিরিয়াল</p>
+                </div>
+                <div class="bg-white p-6 text-center rounded hover:shadow-2xl cursor-pointer transition-all border border-gray-100 group">
+                    <i class="fa-solid fa-bolt text-3xl md:text-4xl text-yellow-500 mb-3 group-hover:scale-110 transition"></i>
+                    <p class="text-xs md:text-sm font-black uppercase">Electrician</p>
+                    <p class="text-[9px] text-gray-400 mt-1">ইলেকট্রিশিয়ান</p>
+                </div>
+                <div class="bg-white p-6 text-center rounded hover:shadow-2xl cursor-pointer transition-all border border-gray-100 group">
+                    <i class="fa-solid fa-droplet text-3xl md:text-4xl text-blue-400 mb-3 group-hover:scale-110 transition"></i>
+                    <p class="text-xs md:text-sm font-black uppercase">Plumber</p>
+                    <p class="text-[9px] text-gray-400 mt-1">প্লাম্বার</p>
+                </div>
+                <div class="bg-white p-6 text-center rounded hover:shadow-2xl cursor-pointer transition-all border border-gray-100 group">
+                    <i class="fa-solid fa-mobile-button text-3xl md:text-4xl text-green-600 mb-3 group-hover:scale-110 transition"></i>
+                    <p class="text-xs md:text-sm font-black uppercase">Billing</p>
+                    <p class="text-[9px] text-gray-400 mt-1">বিল পে</p>
+                </div>
+                <div class="bg-white p-6 text-center rounded hover:shadow-2xl cursor-pointer transition-all border border-gray-100 group">
+                    <i class="fa-solid fa-truck-fast text-3xl md:text-4xl text-red-500 mb-3 group-hover:scale-110 transition"></i>
+                    <p class="text-xs md:text-sm font-black uppercase">Pharmacy</p>
+                    <p class="text-[9px] text-gray-400 mt-1">মেডিসিন</p>
+                </div>
+                <div class="bg-white p-6 text-center rounded hover:shadow-2xl cursor-pointer transition-all border border-gray-100 group">
+                    <i class="fa-solid fa-briefcase-medical text-3xl md:text-4xl text-green-700 mb-3 group-hover:scale-110 transition"></i>
+                    <p class="text-xs md:text-sm font-black uppercase">Ambulance</p>
+                    <p class="text-[9px] text-gray-400 mt-1">অ্যাম্বুলেন্স</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="mt-20 text-white">
+        <button onclick="window.scrollTo(0,0)" class="w-full bg-[#37475a] hover:bg-[#485769] py-4 text-sm font-bold transition">Back to top</button>
+        <div class="bg-smart-green py-12 px-6 md:px-8">
+            <div class="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 text-sm">
+                <div>
+                    <h4 class="font-bold text-smart-yellow mb-4 uppercase border-b border-green-700 pb-2">Company</h4>
+                    <ul class="space-y-3 text-gray-300">
+                        <li><a href="ssdoc/aboutus.html" class="hover:text-white transition underline-offset-4 hover:underline">About Us</a></li>
+                        <li><a href="ssdoc/contactus.html" class="hover:text-white transition">Contact Us</a></li>
+                        <li><a href="ssdoc/privacy.html" class="hover:text-white transition">Privacy Policy</a></li>
+                        <li><a href="ssdoc/refund.html" class="hover:text-white transition">Refund Policy</a></li>
+                        <li><a href="ssdoc/termscondition.html" class="hover:text-white transition">Terms & Condition</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-smart-yellow mb-4 uppercase border-b border-green-700 pb-2">Opportunity</h4>
+                    <ul class="space-y-3 text-gray-300">
+                        <li><a href="service/specialist.html" class="hover:text-white font-bold italic">Join as Specialist</a></li>
+                        <li><a href="#" class="hover:text-white">Become an Associate</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-smart-yellow mb-4 uppercase border-b border-green-700 pb-2">Help Center</h4>
+                    <ul class="space-y-3 text-gray-300">
+                        <li><a href="ssdoc/refund.html" class="hover:text-white transition">Refund Policy</a></li>
+                        <li><a href="#" class="hover:text-red-400 font-bold transition">Report Broker/Fraud</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-smart-yellow mb-4 uppercase border-b border-green-700 pb-2">Social</h4>
+                    <div class="flex gap-6 text-3xl md:text-2xl mt-4">
+                        <a href="#" class="hover:text-smart-yellow transition hover:scale-125"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="hover:text-smart-yellow transition hover:scale-125"><i class="fab fa-whatsapp"></i></a>
+                        <a href="#" class="hover:text-smart-yellow transition hover:scale-125"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="bg-[#002618] py-10 text-center text-[10px] md:text-xs text-gray-400 px-4">
+            <p class="italic">© 2026, SmartSeva Connect - Empowering Local Experts in Domkal, Murshidabad.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
