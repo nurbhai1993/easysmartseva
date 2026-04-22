@@ -1,0 +1,222 @@
+/* --- 1. Variable & Global Setup --- */
+:root {
+    --primary-teal: #004d40;
+    --dark-teal: #00332C;
+    --gold: #FFD700;
+    --light-bg: #f4f7f6;
+    --white: #ffffff;
+    --transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
+
+body {
+    background-color: var(--light-bg);
+    font-family: 'Hind Siliguri', sans-serif;
+    scroll-behavior: smooth;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+/* --- 2. Header & Navigation --- */
+.teal-dark { background-color: var(--primary-teal); }
+.teal-nav { background-color: var(--dark-teal); }
+
+.logo-img {
+    max-height: 50px;
+    width: auto;
+    filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2));
+    transition: var(--transition);
+}
+.logo-img:hover { transform: scale(1.05); }
+
+.login-btn {
+    background: var(--gold);
+    color: var(--primary-teal);
+    padding: 8px 25px;
+    border-radius: 99px;
+    font-weight: bold;
+    transition: var(--transition);
+    border: 2px solid transparent;
+    display: inline-block;
+    text-align: center;
+}
+.login-btn:hover {
+    background: transparent;
+    color: var(--gold);
+    border-color: var(--gold);
+}
+
+/* --- 3. Swiper Hero Section --- */
+.swiper {
+    width: 100%;
+    height: 450px;
+    border-bottom: 5px solid var(--gold);
+}
+.slide-content {
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+.slide-content::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+}
+.slide-content h2 {
+    z-index: 10;
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+    color: white;
+}
+
+/* --- 4. Mission & Vision --- */
+.card-mission, .card-vision {
+    background: var(--white);
+    padding: 35px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+.card-mission { border-left: 8px solid var(--primary-teal); }
+.card-vision { border-right: 8px solid var(--primary-teal); }
+
+.card-mission:hover, .card-vision:hover {
+    transform: translateY(-5px);
+    border-color: var(--gold);
+}
+
+/* --- 5. Services Grid (Firebase Support) --- */
+.section-title {
+    font-size: 1.8rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: var(--primary-teal);
+    margin-bottom: 25px;
+    display: inline-block;
+}
+
+.service-box, .ss-card {
+    background: var(--white);
+    padding: 30px 20px;
+    border-radius: 20px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+    transition: var(--transition);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.service-box:hover, .ss-card:hover {
+    background: var(--primary-teal);
+    color: var(--white) !important;
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 77, 64, 0.2);
+}
+
+.service-box i, .ss-card i {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    display: block;
+    color: var(--primary-teal);
+}
+
+.service-box:hover i, .ss-card:hover i {
+    color: var(--gold) !important;
+}
+
+.stretched-link::after {
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    z-index: 1;
+    content: "";
+}
+
+/* --- 6. Recent Post / Service Card --- */
+.service-card-hover {
+    transition: var(--transition);
+    background: var(--white);
+}
+.service-card-hover:hover {
+    box-shadow: 0 25px 50px -12px rgba(0, 77, 64, 0.2);
+}
+
+/* --- 7. Network Banner --- */
+.network-banner {
+    background: var(--gold);
+    padding: 60px 20px;
+    border-radius: 40px;
+    text-align: center;
+    color: var(--primary-teal);
+    box-shadow: 0 20px 40px rgba(255, 215, 0, 0.2);
+}
+
+.badge {
+    background: rgba(255, 255, 255, 0.4);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 0.8rem;
+    border: 1.5px solid var(--primary-teal);
+    display: inline-block;
+    margin: 5px;
+    transition: 0.3s;
+}
+.badge:hover {
+    background: var(--primary-teal);
+    color: var(--gold);
+}
+
+/* --- 8. Footer & GoToTop --- */
+footer {
+    background-color: var(--dark-teal);
+    color: #e2e8f0;
+    border-top: 4px solid var(--gold);
+}
+
+.footer-title { color: var(--gold); font-weight: 700; margin-bottom: 20px; }
+
+.social-btn {
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; transition: var(--transition);
+    color: white;
+}
+.social-btn:hover {
+    background: var(--gold);
+    color: var(--primary-teal);
+    transform: translateY(-5px);
+}
+
+#goToTop {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    width: 45px; height: 45px;
+    background: var(--gold);
+    color: var(--primary-teal);
+    border-radius: 50%;
+    display: none; /* JS will toggle this */
+    align-items: center; justify-content: center;
+    cursor: pointer; z-index: 100;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: 0.3s;
+}
+
+/* --- 9. Responsive Rules --- */
+@media (max-width: 640px) {
+    .logo-img { max-height: 40px; }
+    .swiper { height: 300px; }
+    .section-title { font-size: 1.4rem; }
+    .network-banner { border-radius: 20px; padding: 40px 15px; }
+}
+
+/* --- 10. Scrollbar --- */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: var(--primary-teal); border-radius: 10px; }

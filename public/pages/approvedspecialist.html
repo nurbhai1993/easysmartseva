@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartSeva | Master Authority Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --smart-green: #004d31; --smart-yellow: #facd15; }
+        .bg-smart-green { background-color: var(--smart-green); }
+        .text-smart-green { color: var(--smart-green); }
+        .tab-active { border-bottom: 4px solid var(--smart-green); color: var(--smart-green); }
+        .check-item { @apply flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 md:p-8 font-sans">
+
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 mb-8 flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-black text-gray-800 italic uppercase">Master <span class="text-smart-green">Authority</span></h1>
+                <p class="text-gray-500 font-medium">ডকুমেন্ট ভেরিফিকেশন এবং কন্ট্রোল প্যানেল।</p>
+            </div>
+            <div class="flex gap-4 mt-4 md:mt-0">
+                <div class="text-center bg-orange-50 px-6 py-2 rounded-2xl border border-orange-100">
+                    <p class="text-[10px] font-black text-orange-400 uppercase">Pending</p>
+                    <h3 id="countPending" class="text-xl font-black text-orange-600">0</h3>
+                </div>
+                <div class="text-center bg-green-50 px-6 py-2 rounded-2xl border border-green-100">
+                    <p class="text-[10px] font-black text-green-400 uppercase">Approved</p>
+                    <h3 id="countApproved" class="text-xl font-black text-green-600">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-8 mb-8 border-b border-gray-200">
+            <button onclick="switchTab('pending')" id="tabPending" class="pb-4 font-black uppercase tracking-widest text-sm tab-active">New Applications</button>
+            <button onclick="switchTab('approved')" id="tabApproved" class="pb-4 font-black uppercase tracking-widest text-sm text-gray-400">Approved List</button>
+        </div>
+
+        <div id="specialistGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+
+    <div id="approveModal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div class="bg-white max-w-lg w-full rounded-[40px] overflow-hidden p-8 relative shadow-2xl">
+            <h2 class="text-xl font-black text-gray-800 mb-6 uppercase italic border-b pb-2">Verification <span class="text-smart-green">Checklist</span></h2>
+            
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <label class="check-item"><input type="checkbox" class="w-4 h-4 accent-green-700"> <span class="text-sm font-bold">আসল আইডি কার্ড (Aadhar/PAN) যাচাই করা হয়েছে।</span></label>
+                    <label class="check-item"><input type="checkbox" class="w-4 h-4 accent-green-700"> <span class="text-sm font-bold">সার্টিফিকেটের অরিজিনাল কপি দেখা হয়েছে।</span></label>
+                    <label class="check-item"><input type="checkbox" class="w-4 h-4 accent-green-700"> <span class="text-sm font-bold">সার্ভিস ফি এবং এগ্রিমেন্ট চূড়ান্ত হয়েছে।</span></label>
+                </div>
+
+                <div class="space-y-3 p-4 bg-gray-50 rounded-2xl border border-dashed">
+                    <p class="text-[10px] font-black text-red-500 uppercase italic">Upload Verification Files (Admin Only)</p>
+                    <input type="file" id="adminAgreement" class="w-full text-xs">
+                    <input type="file" id="adminPassingCert" class="w-full text-xs">
+                    <input type="file" id="adminQualCert" class="w-full text-xs">
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="closeApproveModal()" class="flex-1 bg-gray-100 py-4 rounded-2xl font-black uppercase text-xs">Cancel</button>
+                    <button onclick="processFinalApproval()" class="flex-1 bg-smart-green text-white py-4 rounded-2xl font-black uppercase text-xs shadow-lg">Verify & Approve</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let specialists = JSON.parse(localStorage.getItem('smartSevaDB')) || [];
+        let currentTab = 'pending';
+        let selectedId = null;
+
+        function renderGrid() {
+            const grid = document.getElementById('specialistGrid');
+            grid.innerHTML = '';
+            const filtered = specialists.filter(sp => sp.status === currentTab);
+            
+            document.getElementById('countPending').innerText = specialists.filter(s => s.status === 'pending').length;
+            document.getElementById('countApproved').innerText = specialists.filter(s => s.status === 'approved').length;
+
+            if(filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-20 text-gray-400 font-bold italic">কোনো ডাটা পাওয়া যায়নি!</div>`;
+                return;
+            }
+
+            filtered.forEach(sp => {
+                grid.innerHTML += `
+                    <div class="bg-white p-6 rounded-[35px] border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-4 mb-4">
+                            <img src="${sp.photo || 'https://via.placeholder.com/80'}" class="w-14 h-14 rounded-2xl object-cover border-2 border-smart-green">
+                            <div>
+                                <h3 class="font-black text-gray-800">${sp.name}</h3>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase">${sp.cat} | Exp: ${sp.experience || 'N/A'}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1 mb-4">
+                            ${sp.problems.map(p => `<span class="bg-blue-50 text-blue-500 text-[10px] px-2 py-0.5 rounded-md font-bold italic">${p}</span>`).join('')}
+                        </div>
+
+                        <div class="pt-4 border-t border-dashed flex justify-between items-center">
+                            <p class="text-xl font-black text-gray-800">₹${sp.fee || '0'}</p>
+                            <div class="flex gap-2">
+                                ${sp.status === 'pending' ? 
+                                    `<button onclick="openApproveModal(${sp.id})" class="bg-smart-green text-white px-5 py-2 rounded-xl text-xs font-black uppercase">Verify</button>` : 
+                                    `<button onclick="deleteSp(${sp.id})" class="text-red-400 px-2"><i class="fa-solid fa-trash"></i></button>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            localStorage.setItem('smartSevaDB', JSON.stringify(specialists));
+        }
+
+        // Approval Logic
+        function openApproveModal(id) {
+            selectedId = id;
+            document.getElementById('approveModal').classList.remove('hidden');
+        }
+
+        function closeApproveModal() { document.getElementById('approveModal').classList.add('hidden'); }
+
+        async function getBase64(file) {
+            if (!file) return null;
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+            });
+        }
+
+        async function processFinalApproval() {
+            // চেক বক্স চেক করা হয়েছে কি না যাচাই
+            const checks = document.querySelectorAll('#approveModal input[type="checkbox"]');
+            const allChecked = Array.from(checks).every(c => c.checked);
+            
+            const file1 = document.getElementById('adminAgreement').files[0];
+            const file2 = document.getElementById('adminPassingCert').files[0];
+            const file3 = document.getElementById('adminQualCert').files[0];
+
+            if(!allChecked) return alert("দয়া করে সকল ভেরিফিকেশন চেকলিস্ট পূর্ণ করুন!");
+            if(!file1 || !file2 || !file3) return alert("দয়া করে ৩টি ভেরিফিকেশন ফাইল আপলোড করুন!");
+
+            const index = specialists.findIndex(s => s.id === selectedId);
+            if(index !== -1) {
+                specialists[index].status = 'approved';
+                // অ্যাডমিন ডকুমেন্টস স্টোর করা
+                specialists[index].verifiedDocs = {
+                    agreement: await getBase64(file1),
+                    passingCert: await getBase64(file2),
+                    qualCert: await getBase64(file3),
+                    date: new Date().toLocaleDateString()
+                };
+                
+                alert("ভেরিফিকেশন সম্পন্ন! স্পেশালিস্ট এখন লাইভ।");
+                closeApproveModal();
+                renderGrid();
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tabPending').className = tab === 'pending' ? 'pb-4 font-black uppercase tracking-widest text-sm tab-active' : 'pb-4 font-black uppercase tracking-widest text-sm text-gray-400';
+            document.getElementById('tabApproved').className = tab === 'approved' ? 'pb-4 font-black uppercase tracking-widest text-sm tab-active' : 'pb-4 font-black uppercase tracking-widest text-sm text-gray-400';
+            renderGrid();
+        }
+
+        function deleteSp(id) { if(confirm("মুছে ফেলতে চান?")) { specialists = specialists.filter(s => s.id !== id); renderGrid(); } }
+
+        renderGrid();
+    </script>
+</body>
+</html>

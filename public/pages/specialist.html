@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartSeva | Master Authority Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --smart-green: #004d31; --smart-yellow: #facd15; }
+        .bg-smart-green { background-color: var(--smart-green); }
+        .text-smart-green { color: var(--smart-green); }
+        .worker-card { transition: all 0.3s ease; border-radius: 30px; }
+        .worker-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 md:p-8 font-sans">
+
+    <div class="max-w-7xl mx-auto">
+        <div class="bg-white p-6 rounded-[35px] shadow-sm border border-gray-100 mb-8 flex flex-col lg:flex-row justify-between items-center gap-6">
+            <div>
+                <h1 class="text-3xl font-black text-gray-800 italic uppercase tracking-tighter">Master <span class="text-smart-green">Authority</span></h1>
+                <p class="text-gray-500 font-medium text-sm">স্পেশালিস্ট এবং তাদের সমাধান করা সমস্যার তালিকা তৈরি করুন।</p>
+            </div>
+            <button onclick="openModal()" class="bg-smart-green text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:bg-black transition flex items-center gap-2">
+                <i class="fa-solid fa-plus-circle"></i> ADD NEW SPECIALIST
+            </button>
+        </div>
+
+        <div id="directoryGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+    </div>
+
+    <div id="addModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-xl rounded-[40px] overflow-hidden shadow-2xl">
+            <div class="bg-smart-green p-6 text-white flex justify-between items-center">
+                <h3 class="font-black text-xl italic uppercase">Register Specialist</h3>
+                <button onclick="closeModal()" class="text-3xl">&times;</button>
+            </div>
+            
+            <div class="p-8 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase">Name</label>
+                        <input type="text" id="regName" class="w-full mt-1 p-3 bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-green-500 font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase">Category</label>
+                        <select id="regCat" class="w-full mt-1 p-3 bg-gray-50 border rounded-xl outline-none font-bold">
+                            <option value="Doctor">Doctor</option>
+                            <option value="Electrician">Electrician</option>
+                            <option value="Plumber">Plumber</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase text-red-500">Problems he solves (কমা দিয়ে লিখুন)</label>
+                    <textarea id="regProblems" placeholder="উদাঃ জ্বর, সর্দি, পেটে ব্যথা, পক্স" class="w-full mt-1 p-3 bg-gray-50 border rounded-xl outline-none focus:ring-2 focus:ring-red-500 font-medium h-20"></textarea>
+                    <p class="text-[9px] text-gray-400 mt-1 italic">বুকিং পেজে এই সমস্যাগুলোই অটো-সাজেস্ট হিসেবে দেখাবে।</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase">Fee (₹)</label>
+                        <input type="number" id="regFee" class="w-full mt-1 p-3 bg-gray-50 border rounded-xl outline-none font-black text-smart-green">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase">Degree</label>
+                        <input type="text" id="regDegree" class="w-full mt-1 p-3 bg-gray-50 border rounded-xl outline-none">
+                    </div>
+                </div>
+
+                <button onclick="saveProvider()" class="w-full bg-smart-green text-white py-4 rounded-2xl font-black shadow-xl uppercase tracking-widest mt-4">Save to Directory</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ডামি ডাটা (এগুলো বুকিং পেজে যাবে)
+        let directory = [
+            { id: 1, name: "Dr. Ariful Islam", cat: "Doctor", degree: "MBBS", fee: 500, problems: ["জ্বর", "সর্দি", "মাথা ব্যথা", "বমি"] },
+            { id: 2, name: "Sk. Mofizul", cat: "Electrician", degree: "ITI", fee: 200, problems: ["ফ্যান রিপেয়ার", "শর্ট সার্কিট", "ওয়্যারিং"] }
+        ];
+
+        function renderDirectory() {
+            const grid = document.getElementById('directoryGrid');
+            grid.innerHTML = '';
+            
+            directory.forEach(item => {
+                grid.innerHTML += `
+                    <div class="worker-card bg-white p-6 border border-gray-100 shadow-sm">
+                        <span class="text-[9px] font-black bg-gray-100 px-2 py-1 rounded-full text-gray-500 uppercase">${item.cat}</span>
+                        <h4 class="text-xl font-black text-gray-800 mt-2">${item.name}</h4>
+                        <p class="text-xs font-bold text-smart-green mb-3">${item.degree}</p>
+                        
+                        <div class="mb-4">
+                            <p class="text-[10px] font-black text-gray-400 uppercase mb-1">Expertise/Problems:</p>
+                            <div class="flex flex-wrap gap-1">
+                                ${item.problems.map(p => `<span class="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-lg font-bold">${p}</span>`).join('')}
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-4 border-t border-dashed">
+                            <p class="text-xl font-black text-gray-800">₹${item.fee}</p>
+                            <button onclick="deleteProvider(${item.id})" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // ডাটা লোকাল স্টোরেজে সেভ করা (যাতে বুকিং পেজ এখান থেকে ডাটা নিতে পারে)
+            localStorage.setItem('smartSevaDirectory', JSON.stringify(directory));
+        }
+
+        function saveProvider() {
+            const name = document.getElementById('regName').value;
+            const probInput = document.getElementById('regProblems').value;
+            const fee = document.getElementById('regFee').value;
+
+            if(!name || !probInput || !fee) return alert("সব ঘর পূরণ করুন!");
+
+            // কমা দিয়ে আলাদা করা সমস্যাগুলোকে অ্যারেতে কনভার্ট করা
+            const problemsArray = probInput.split(',').map(p => p.trim()).filter(p => p !== "");
+
+            directory.push({
+                id: Date.now(),
+                name: name,
+                cat: document.getElementById('regCat').value,
+                degree: document.getElementById('regDegree').value || "N/A",
+                fee: fee,
+                problems: problemsArray
+            });
+
+            renderDirectory();
+            closeModal();
+            // ক্লিয়ার ফর্ম
+            document.getElementById('regName').value = '';
+            document.getElementById('regProblems').value = '';
+        }
+
+        function deleteProvider(id) {
+            directory = directory.filter(i => i.id !== id);
+            renderDirectory();
+        }
+
+        function openModal() { document.getElementById('addModal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('addModal').classList.add('hidden'); }
+
+        renderDirectory();
+    </script>
+</body>
+</html>

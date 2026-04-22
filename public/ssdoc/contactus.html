@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>যোগাযোগ করুন - SmartSeva Connect</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f9ff;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        header {
+            text-align: center;
+            padding: 50px 20px;
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+        }
+        h1 { margin: 0; font-size: 2.2em; }
+        .contact-wrapper {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .contact-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        .contact-card h3 {
+            color: #1e7e34;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-top: 40px;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .badge {
+            background: #fff3cd;
+            color: #856404;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        footer {
+            text-align: center;
+            padding: 30px;
+            background: #333;
+            color: white;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>যোগাযোগ করুন</h1>
+    <p>SmartSeva Connect সর্বদা আপনার সেবায় নিয়োজিত</p>
+</header>
+
+<div class="container">
+    
+    <div class="contact-wrapper">
+        <div class="contact-card">
+            <span class="badge">২৪/৭ কাস্টমার সেবা</span>
+            <h3>সাধারণ জিজ্ঞাসা</h3>
+            <p>আপনার কোনো প্রশ্ন থাকলে বা সাহায্যের প্রয়োজন হলে আমাদের কল করুন।</p>
+            <p><strong>ফোন:</strong> +91 6297033930</p>
+            <p><strong>ইমেইল:</strong> info@smartsevaconnect.com</p>
+        </div>
+
+        <div class="contact-card">
+            <span class="badge">পার্টনারশিপ</span>
+            <h3>সার্ভিস প্রোভাইডার</h3>
+            <p>আপনি কি একজন দক্ষ সেবাদাতা? আমাদের সাথে যুক্ত হয়ে আয় করতে চান?</p>
+            <p><strong>যোগাযোগ:</strong> partner@smartsevaconnect.com</p>
+            <p><strong>হোয়াটসঅ্যাপ:</strong> +91 9093646463</p>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h2 style="text-align: center; color: #1e7e34;">সরাসরি মেসেজ পাঠান</h2>
+        <p style="text-align: center; color: #666;">নিচের ফর্মটি পূরণ করুন, আমাদের প্রতিনিধি খুব দ্রুত আপনার সাথে যোগাযোগ করবেন।</p>
+        
+        <form action="#">
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <input type="text" placeholder="আপনার নাম" style="flex: 1; min-width: 250px;" required>
+                <input type="email" placeholder="আপনার ইমেইল" style="flex: 1; min-width: 250px;" required>
+            </div>
+            
+            <select required>
+                <option value="">কোন বিষয়ে সাহায্য প্রয়োজন?</option>
+                <option value="health">হেলথ সার্ভিস (Health Service)</option>
+                <option value="member">মেম্বারশিপ কার্ড সংক্রান্ত</option>
+                <option value="report">কোনো অভিযোগ বা হয়রানি রিপোর্ট</option>
+                <option value="others">অন্যান্য</option>
+            </select>
+            
+            <textarea rows="5" placeholder="আপনার বিস্তারিত মেসেজ এখানে লিখুন..." required></textarea>
+            
+            <button type="submit">মেসেজ পাঠান</button>
+        </form>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px; color: #666;">
+        <p><strong>অফিস ঠিকানা:</strong> Kushabaria kalighatpara, Domkal, Murshidabad</p>
+        <p><em>প্রতিটি মানুষের ভরসার জায়গা হতে আমরা প্রতিশ্রুতিবদ্ধ।</em></p>
+    </div>
+
+</div>
+
+<footer>
+    <p>&copy; 2026 SmartSeva Connect. </p>
+</footer>
+
+</body>
+</html>
