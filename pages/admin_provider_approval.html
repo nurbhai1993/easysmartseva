@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root { --gold: #FFD700; --dark: #0f172a; --card: #1e293b; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .admin-container { max-width: 900px; margin: auto; }
+        table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 10px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; }
+        th { background: #111827; color: var(--gold); }
+        .btn-approve { background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+        .btn-reject { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; margin-left: 5px; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; background: #f39c12; color: black; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="admin-container">
+    <h2><i class="fas fa-user-check"></i> নতুন সার্ভিস প্রোভাইডার যাচাই</h2>
+    <p>নিচে পেন্ডিং আবেদনগুলোর তালিকা দেওয়া হলো:</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>ID & Name</th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="applicationTable">
+            </tbody>
+    </table>
+</div>
+
+<script type="module">
+    import { db } from '../js/firebase-config.js';
+    import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const q = query(collection(db, "users"), where("status", "==", "pending"), where("role", "==", "worker"));
+
+    onSnapshot(q, (snapshot) => {
+        const table = document.getElementById('applicationTable');
+        table.innerHTML = "";
+
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const id = docSnap.id;
+
+            table.innerHTML += `
+                <tr>
+                    <td>
+                        <b>${data.userID}</b><br>
+                        <small>${data.ownerName} (${data.companyName})</small>
+                    </td>
+                    <td>${data.serviceType}</td>
+                    <td>${data.location}</td>
+                    <td><span class="status-badge">${data.status}</span></td>
+                    <td>
+                        <button class="btn-approve" onclick="approveWorker('${id}')">Active</button>
+                        <button class="btn-reject" onclick="deleteWorker('${id}')">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    });
+
+    // ১. প্রোভাইডার একটিভ করা
+    window.approveWorker = async (docId) => {
+        if(confirm("আপনি কি এই প্রোভাইডারকে একটিভ করতে চান?")) {
+            await updateDoc(doc(db, "users", docId), {
+                status: "active"
+            });
+            alert("প্রোভাইডার এখন কাজ করার জন্য তৈরি!");
+        }
+    };
+
+    // ২. আবেদন বাতিল করা
+    window.deleteWorker = async (docId) => {
+        if(confirm("আবেদনটি কি ডিলিট করে দিতে চান?")) {
+            await deleteDoc(doc(db, "users", docId));
+        }
+    };
+</script>
+
+</body>
+</html>

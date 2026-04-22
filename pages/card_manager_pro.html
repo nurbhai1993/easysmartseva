@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Pro Card Manager - CEO</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --gold: #FFD700; --dark: #002d28; --input: #003d35; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,215,0,0.2); margin-bottom: 20px; }
+        h2 { color: var(--gold); border-bottom: 1px solid #444; padding-bottom: 10px; }
+        
+        .header-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        input, textarea { padding: 12px; border-radius: 8px; border: 1px solid #444; background: var(--input); color: white; width: 100%; box-sizing: border-box; }
+        
+        /* Benefit Row Styling */
+        .benefit-row { display: grid; grid-template-columns: 2fr 3fr 1fr 1fr 50px; gap: 10px; margin-bottom: 10px; align-items: center; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; }
+        .btn-add-row { background: #00897b; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        .btn-save { background: var(--gold); color: var(--dark); border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; font-size: 1.1rem; }
+        .btn-remove { color: #ff4d4d; background: none; border: none; cursor: pointer; font-size: 1.2rem; }
+
+        /* Table View */
+        .card-display { margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.3); }
+        th, td { padding: 12px; text-align: left; border: 1px solid #333; }
+        th { color: var(--gold); }
+        .benefit-list { font-size: 12px; padding-left: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container" style="max-width: 1200px; margin: 0 auto;">
+    <div class="box">
+        <h2><i class="fas fa-id-card"></i> Card & Unlimited Benefits Manager</h2>
+        
+        <div class="header-inputs">
+            <div>
+                <label>Card Name</label>
+                <input type="text" id="cardName" placeholder="e.g. Platinum Card">
+            </div>
+            <div>
+                <label>Card Cost (₹)</label>
+                <input type="number" id="cardCost" placeholder="e.g. 1999">
+            </div>
+        </div>
+
+        <div id="benefitContainer">
+            <h4 style="color: var(--gold);">Add Benefits & Details:</h4>
+            <div class="benefit-row" style="background:none; font-weight:bold; font-size:13px; color:#aaa;">
+                <div>Benefit Title</div>
+                <div>Description</div>
+                <div>Discount (%)</div>
+                <div>Others</div>
+                <div></div>
+            </div>
+            
+            <div class="benefit-row">
+                <input type="text" class="b-title" placeholder="Benefit Name">
+                <input type="text" class="b-desc" placeholder="Brief details">
+                <input type="text" class="b-disc" placeholder="10%">
+                <input type="text" class="b-others" placeholder="Notes">
+                <button class="btn-remove" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+
+        <button class="btn-add-row" onclick="addBenefitRow()"><i class="fas fa-plus"></i> Add Next Benefit</button>
+        <button class="btn-save" id="saveCardBtn">CONFIRM & SAVE CARD</button>
+    </div>
+
+    <div class="box card-display">
+        <h3>Live Card Database</h3>
+        <table id="cardTable">
+            <thead>
+                <tr>
+                    <th>Card Name</th>
+                    <th>Cost</th>
+                    <th>Benefits Detail (List)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="cardTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCzv1cwnfrhw7Ph5sTb-Kt_RS1q6Cpfhbo",
+        authDomain: "smartseva-connect.firebaseapp.com",
+        projectId: "smartseva-connect",
+        storageBucket: "smartseva-connect.firebasestorage.app",
+        messagingSenderId: "829136094605",
+        appId: "1:829136094605:web:82b07d722959dabcf729c4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // --- Row Add Korar Function ---
+    window.addBenefitRow = () => {
+        const container = document.getElementById('benefitContainer');
+        const row = document.createElement('div');
+        row.className = 'benefit-row';
+        row.innerHTML = `
+            <input type="text" class="b-title" placeholder="Benefit Name">
+            <input type="text" class="b-desc" placeholder="Brief details">
+            <input type="text" class="b-disc" placeholder="10%">
+            <input type="text" class="b-others" placeholder="Notes">
+            <button class="btn-remove" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
+        `;
+        container.appendChild(row);
+    };
+
+    // --- Data Save Logic ---
+    document.getElementById('saveCardBtn').onclick = async () => {
+        const name = document.getElementById('cardName').value;
+        const cost = document.getElementById('cardCost').value;
+        
+        const titles = document.getElementsByClassName('b-title');
+        const descs = document.getElementsByClassName('b-desc');
+        const discs = document.getElementsByClassName('b-disc');
+        const others = document.getElementsByClassName('b-others');
+
+        let benefitsList = [];
+        for(let i=0; i<titles.length; i++) {
+            if(titles[i].value) {
+                benefitsList.push({
+                    title: titles[i].value,
+                    description: descs[i].value,
+                    discount: discs[i].value,
+                    others: others[i].value
+                });
+            }
+        }
+
+        if(!name || !cost) return alert("Card Name ebong Cost likhun!");
+
+        await addDoc(collection(db, "pro_cards"), {
+            name, cost, benefitsList, timestamp: serverTimestamp()
+        });
+
+        alert("Card successfully saved with " + benefitsList.length + " benefits!");
+        location.reload(); // Reset form
+    };
+
+    // --- Real-time List ---
+    onSnapshot(collection(db, "pro_cards"), (snap) => {
+        const tbody = document.getElementById('cardTableBody');
+        tbody.innerHTML = "";
+        snap.forEach(d => {
+            const data = d.data();
+            let bHtml = '<ul class="benefit-list">';
+            data.benefitsList.forEach(b => {
+                bHtml += `<li><b>${b.title}</b>: ${b.description} (Disc: ${b.discount})</li>`;
+            });
+            bHtml += '</ul>';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${data.name}</td>
+                    <td>₹${data.cost}</td>
+                    <td>${bHtml}</td>
+                    <td><button class="btn-remove" onclick="deleteCard('${d.id}')"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `;
+        });
+    });
+
+    window.deleteCard = async (id) => {
+        if(confirm("Delete?")) await deleteDoc(doc(db, "pro_cards", id));
+    };
+</script>
+</body>
+</html>

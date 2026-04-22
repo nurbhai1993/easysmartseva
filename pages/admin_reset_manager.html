@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { background: #002d28; color: white; font-family: sans-serif; padding: 20px; }
+        .log-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .log-table th, .log-table td { padding: 12px; border: 1px solid #334155; text-align: left; }
+        th { background: #FFD700; color: #000; }
+        .btn-reset { background: #2ecc71; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; color: #000; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2><i class="fas fa-key"></i> Password Reset Requests</h2>
+    <table class="log-table">
+        <thead>
+            <tr>
+                <th>সময়</th>
+                <th>মোবাইল নম্বর</th>
+                <th>অ্যাকশন</th>
+            </tr>
+        </thead>
+        <tbody id="requestBody"></tbody>
+    </table>
+
+    <script type="module">
+        import { db } from '../js/firebase-config.js';
+        import { collection, onSnapshot, query, where, doc, updateDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // পেন্ডিং রিকোয়েস্ট লোড করা
+        onSnapshot(collection(db, "reset_requests"), (snapshot) => {
+            const tbody = document.getElementById('requestBody');
+            tbody.innerHTML = "";
+            snapshot.forEach(d => {
+                const req = d.data();
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${req.requestTime}</td>
+                        <td>${req.mobile}</td>
+                        <td>
+                            <button class="btn-reset" onclick="handleReset('${d.id}', '${req.mobile}')">রিসেট করুন</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+
+        // পাসওয়ার্ড রিসেট হ্যান্ডেলার
+        window.handleReset = async (requestId, mobile) => {
+            const newPass = prompt(`ইউজার (${mobile}) এর জন্য নতুন পাসওয়ার্ড দিন:`);
+            if(!newPass) return;
+
+            try {
+                // ১. ইউজার খুঁজে বের করা মোবাইল নম্বর দিয়ে
+                const q = query(collection(db, "users"), where("mobile", "==", mobile));
+                const userSnap = await getDocs(q);
+
+                if(userSnap.empty) return alert("এই নম্বরে কোনো ইউজার পাওয়া যায়নি!");
+
+                const userDocId = userSnap.docs[0].id;
+
+                // ২. ইউজারের পাসওয়ার্ড আপডেট করা এবং ৬ মাসের লক খুলে দেওয়া (lastPassUpdate: 0)
+                await updateDoc(doc(db, "users", userDocId), {
+                    password: newPass,
+                    lastPassUpdate: 0 
+                });
+
+                // ৩. রিকোয়েস্টটি ডিলিট করে দেওয়া
+                await deleteDoc(doc(db, "reset_requests", requestId));
+
+                alert("সফলভাবে পাসওয়ার্ড রিসেট হয়েছে! নতুন পাসওয়ার্ড: " + newPass);
+            } catch (err) { alert(err.message); }
+        };
+    </script>
+</body>
+</html>

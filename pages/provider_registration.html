@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Provider Registration - SmartSeva</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --blue: #1a73e8; --green: #28a745; --bg: #f0f2f5; --gold: #FFD700; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .form-container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 650px; }
+        
+        h2 { text-align: center; color: var(--blue); margin-bottom: 5px; }
+        p.sub-title { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
+        
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; color: #444; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; transition: 0.3s; }
+        input:focus { border-color: var(--blue); outline: none; background: #f8fbff; }
+
+        .btn-submit { width: 100%; padding: 15px; background-color: var(--green); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; transition: 0.3s; box-shadow: 0 4px 10px rgba(40,167,69,0.3); }
+        .btn-submit:hover { background-color: #218838; transform: translateY(-2px); }
+        .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .footer-note { font-size: 12px; color: #888; margin-top: 20px; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+        .guarantee-tick { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #555; margin-top: 10px; }
+        .guarantee-tick input { width: auto; margin-top: 3px; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2><i class="fas fa-tools"></i> সার্ভিস প্রোভাইডার আবেদন</h2>
+    <p class="sub-title">মুর্শিদাবাদ জেলায় আমাদের সাথে যুক্ত হয়ে ব্যবসা বাড়ান।</p>
+    
+    <form id="providerForm">
+        <div class="form-group">
+            <label>প্রতিষ্ঠানের নাম (Company/Shop Name):</label>
+            <input type="text" id="company" placeholder="উদা: মুর্শিদাবাদ টেক সলিউশন" required>
+        </div>
+
+        <div class="form-group">
+            <label>মালিকের নাম (Owner Name):</label>
+            <input type="text" id="owner" placeholder="আপনার পুরো নাম" required>
+        </div>
+
+        <div class="form-group">
+            <label>সার্ভিস ক্যাটাগরি বেছে নিন:</label>
+            <input type="text" id="serviceSearch" list="azServices" placeholder="সার্ভিস টাইপ করুন (উদা: AC, প্লাম্বার...)" required>
+            <datalist id="azServices">
+                <option value="Home Appliances - এসি সার্ভিসিং">
+                <option value="Technical - ইলেকট্রিশিয়ান">
+                <option value="Technical - প্লাম্বার">
+                <option value="Cleaning - ফুল হোম ক্লিনিং">
+                <option value="Renovation - হাউস পেইন্টার">
+                <option value="Digital - সিসিটিভি ক্যামেরা">
+                <option value="Beauty - ওমেনস পার্লার">
+                <option value="Professional - হোম টিউটর">
+            </datalist>
+        </div>
+
+        <div class="form-group">
+            <label>WhatsApp নম্বর (+91):</label>
+            <input type="tel" id="whatsapp" placeholder="১০ সংখ্যার মোবাইল নম্বর" pattern="[0-9]{10}" required>
+        </div>
+
+        <div class="form-group">
+            <label>লোকেশন (মুর্শিদাবাদ - নির্দিষ্ট এলাকা):</label>
+            <input type="text" id="location" placeholder="উদা: বহরমপুর, লালবাগ, কান্দি" required>
+        </div>
+
+        <div class="form-group">
+            <label class="guarantee-tick">
+                <input type="checkbox" required>
+                <span>আমি স্বীকার করছি যে আমি কাস্টমারকে সঠিক সার্ভিস দেব এবং কাজের সম্পূর্ণ গ্যারান্টি প্রদান করব।</span>
+            </label>
+        </div>
+        
+        <button type="submit" id="submitBtn" class="btn-submit">আবেদন জমা দিন (Submit)</button>
+        
+        <div class="footer-note">
+            * আমাদের টিম আপনার তথ্য যাচাই করে ২৪ ঘণ্টার মধ্যে যোগাযোগ করবে।
+        </div>  
+    </form>
+</div>
+
+<script type="module">
+    import { db } from '../js/firebase-config.js';
+    import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // ১. ইউনিক আইডি জেনারেট করার ফাংশন (SS + 4 Random Numbers)
+    function generateProviderID() {
+        const rand = Math.floor(1000 + Math.random() * 9000);
+        return "SP" + rand; // SP = Service Provider
+    }
+
+    document.getElementById('providerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerText = "প্রসেসিং হচ্ছে...";
+        
+        const newID = generateProviderID();
+        
+        const formData = {
+            userID: newID, // ইউনিক প্রোভাইডার আইডি
+            companyName: document.getElementById('company').value,
+            ownerName: document.getElementById('owner').value,
+            serviceType: document.getElementById('serviceSearch').value,
+            mobile: document.getElementById('whatsapp').value,
+            location: document.getElementById('location').value,
+            role: "worker", // যেহেতু সে সার্ভিস দেবে
+            wallet: 0,      // শুরুতে ০ টাকা ব্যালেন্স
+            rank: 1,        // ডিফল্ট র‍্যাঙ্ক
+            status: "pending", // এডমিন এপ্রুভ করলে একটিভ হবে
+            appliedDate: serverTimestamp()
+        };
+
+        try {
+            // ডাটাবেসে সেভ করা
+            await addDoc(collection(db, "users"), formData); // সরাসরি ইউজার টেবিলে পেন্ডিং হিসেবে রাখা
+            
+            alert(`আবেদন সফল! আপনার সাময়িক আইডি: ${newID}\nআমাদের টিম শীঘ্রই যোগাযোগ করবে।`);
+            document.getElementById('providerForm').reset();
+        } catch (error) {
+            console.error("Error:", error);
+            alert("দুঃখিত, কোনো সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "আবেদন জমা দিন (Submit)";
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Service Structure Management - CEO</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --gold: #FFD700; --dark: #002d28; --input: #003d35; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        .box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,215,0,0.2); margin-bottom: 20px; }
+        h2 { color: var(--gold); border-bottom: 1px solid #444; padding-bottom: 10px; }
+        
+        /* Input Design */
+        .form-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        input { flex: 1; min-width: 150px; padding: 12px; border-radius: 8px; border: 1px solid #444; background: var(--input); color: white; }
+        
+        .btn-add-main { background: var(--gold); color: var(--dark); border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        
+        /* Tree View Styling */
+        .category-group { background: rgba(0,0,0,0.2); border-left: 4px solid var(--gold); padding: 15px; margin-top: 15px; border-radius: 8px; }
+        .service-item { display: flex; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 8px 15px; margin: 5px 0 5px 20px; border-radius: 5px; border-left: 2px solid #aaa; }
+        
+        .badge-price { background: var(--gold); color: var(--dark); padding: 2px 8px; border-radius: 15px; font-weight: bold; font-size: 12px; }
+        .btn-mini { background: none; border: none; color: #ff4d4d; cursor: pointer; font-size: 14px; }
+        .btn-sub { background: #005a50; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+
+        /* Audit Log */
+        .log-table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 12px; }
+        .log-table th, .log-table td { padding: 10px; border-bottom: 1px solid #333; text-align: left; }
+        .log-table th { color: var(--gold); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="box">
+        <h2><i class="fas fa-layer-group"></i> সার্ভিস ক্যাটাগরি সেটআপ</h2>
+        <div class="form-row">
+            <input type="text" id="mainCat" placeholder="যেমন: Health, Education, Legal">
+            <button class="btn-add-main" id="addMainBtn">নতুন ক্যাটাগরি তৈরি করুন</button>
+        </div>
+    </div>
+
+    <div class="box">
+        <h3>সার্ভিস এবং চার্জ লিস্ট</h3>
+        <div id="serviceTree">লোডিং হচ্ছে...</div>
+    </div>
+
+    <div class="box" style="background: rgba(0,0,0,0.3);">
+        <h3><i class="fas fa-history"></i> অ্যাক্টিভিটি লগ (বাংলা)</h3>
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>সময়</th>
+                    <th>অ্যাডমিন</th>
+                    <th>বিস্তারিত</th>
+                </tr>
+            </thead>
+            <tbody id="logBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, arrayUnion, updateDoc, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCzv1cwnfrhw7Ph5sTb-Kt_RS1q6Cpfhbo",
+        authDomain: "smartseva-connect.firebaseapp.com",
+        projectId: "smartseva-connect",
+        storageBucket: "smartseva-connect.firebasestorage.app",
+        messagingSenderId: "829136094605",
+        appId: "1:829136094605:web:82b07d722959dabcf729c4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const adminID = localStorage.getItem('userID') || "CEO-INDIA";
+
+    // --- ১. মেইন ক্যাটাগরি অ্যাড ---
+    document.getElementById('addMainBtn').onclick = async () => {
+        const catName = document.getElementById('mainCat').value;
+        if(!catName) return;
+        
+        await addDoc(collection(db, "service_structure"), {
+            categoryName: catName,
+            services: [], // এখানে সাব-সার্ভিসগুলো জমা হবে
+            timestamp: serverTimestamp()
+        });
+        
+        createLog(`নতুন ক্যাটাগরি "${catName}" তৈরি করা হয়েছে।`);
+        document.getElementById('mainCat').value = "";
+    };
+
+    // --- ২. সাব-সার্ভিস অ্যাড করা (Nested) ---
+    window.addSubService = async (id, catName) => {
+        const sName = prompt("সার্ভিসের নাম লিখুন:");
+        const sCharge = prompt("সার্ভিস চার্জ (INR) লিখুন:");
+        
+        if(sName && sCharge) {
+            const docRef = doc(db, "service_structure", id);
+            const serviceData = {
+                name: sName,
+                charge: Number(sCharge),
+                id: Date.now()
+            };
+            
+            await updateDoc(docRef, {
+                services: arrayUnion(serviceData)
+            });
+            
+            createLog(`${catName} ক্যাটাগরিতে "${sName}" সার্ভিস যুক্ত করা হয়েছে (চার্জ: ₹${sCharge})।`);
+        }
+    };
+
+    // --- ৩. রিয়েল-টাইম সার্ভিস ট্রি প্রদর্শন ---
+    onSnapshot(collection(db, "service_structure"), (snapshot) => {
+        const treeDiv = document.getElementById('serviceTree');
+        treeDiv.innerHTML = "";
+        
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const id = docSnap.id;
+            
+            let html = `
+                <div class="category-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong><i class="fas fa-folder-open"></i> ${data.categoryName}</strong>
+                        <button class="btn-sub" onclick="addSubService('${id}', '${data.categoryName}')">+ সার্ভিস যোগ করুন</button>
+                    </div>
+            `;
+            
+            data.services.forEach(s => {
+                html += `
+                    <div class="service-item">
+                        <span>${s.name}</span>
+                        <div>
+                            <span class="badge-price">₹${s.charge}</span>
+                            <button class="btn-mini" onclick="deleteService('${id}', ${s.id}, '${s.name}')"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            treeDiv.innerHTML += html;
+        });
+    });
+
+    // --- ৪. লগ তৈরি ফাংশন ---
+    async function createLog(msg) {
+        await addDoc(collection(db, "service_logs"), {
+            admin: adminID,
+            details: msg,
+            time: new Date().toLocaleString('bn-IN'),
+            timestamp: serverTimestamp()
+        });
+    }
+
+    // --- ৫. লগ প্রদর্শন ---
+    const qLogs = query(collection(db, "service_logs"), orderBy("timestamp", "desc"));
+    onSnapshot(qLogs, (snapshot) => {
+        const body = document.getElementById('logBody');
+        body.innerHTML = "";
+        snapshot.forEach(d => {
+            const l = d.data();
+            body.innerHTML += `<tr><td>${l.time}</td><td>${l.admin}</td><td>${l.details}</td></tr>`;
+        });
+    });
+
+    // সার্ভিস ডিলিট লজিক
+    window.deleteService = async (docId, sId, sName) => {
+        if(confirm(`"${sName}" সার্ভিসটি ডিলিট করতে চান?`)) {
+            const docRef = doc(db, "service_structure", docId);
+            // এখানে ফিল্টার করে রিমুভ করার লজিক দিতে হয়
+            alert("Delete logic ready. For array update, use filter.");
+        }
+    };
+</script>
+</body>
+</html>

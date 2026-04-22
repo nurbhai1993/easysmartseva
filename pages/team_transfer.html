@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root { --gold: #FFD700; --dark: #0f172a; --card: #1e293b; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .transfer-box { max-width: 450px; background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid rgba(255, 215, 0, 0.3); margin: auto; }
+        .balance-info { background: rgba(255, 215, 0, 0.1); padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; border: 1px dashed var(--gold); }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #000; color: #fff; box-sizing: border-box; }
+        
+        /* Receiver Info Style */
+        .receiver-preview { background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; margin: 10px 0; display: none; border-left: 4px solid var(--gold); }
+        .receiver-preview p { margin: 5px 0; font-size: 14px; }
+        .receiver-preview b { color: var(--gold); }
+
+        button { width: 100%; padding: 12px; background: var(--gold); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; color: #000; }
+        button:disabled { background: #4b5563; cursor: not-allowed; }
+        .note { font-size: 12px; color: #94a3b8; margin-top: 15px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+<div class="transfer-box">
+    <h2 style="color: var(--gold); text-align: center; margin-top: 0;">Fund Transfer</h2>
+    
+    <div class="balance-info">
+        My Balance: <span id="myBalDisplay" style="font-weight: bold; color: var(--gold);">Loading...</span>
+    </div>
+
+    <label>User ID</label>
+    <div style="display: flex; gap: 10px;">
+        <input type="text" id="targetUserID" placeholder="Enter User ID (e.g. SS1234)">
+        <button id="verifyBtn" style="width: 100px; font-size: 13px; margin: 10px 0;">Verify</button>
+    </div>
+
+    <div id="receiverBox" class="receiver-preview">
+        <p>Name: <b id="recName">---</b></p>
+        <p>Sponsor: <b id="recSponsor">---</b></p>
+    </div>
+    
+    <label>Amount (₹ 1,000 - ₹ 1,00,000)</label>
+    <input type="number" id="transferAmount" placeholder="Enter amount">
+    
+    <button id="transferBtn" disabled>Transfer Now</button>
+    
+    <div class="note">
+        * Transfer-এর পর আপনার ওয়ালেটে অন্তত <b>₹ 20,000</b> থাকতে হবে।<br>
+        * ভুল আইডিতে টাকা পাঠালে কর্তৃপক্ষ দায়ী থাকবে না।
+    </div>
+    
+    <p id="statusMsg" style="text-align: center; margin-top: 15px; font-weight: bold; font-size: 14px;"></p>
+</div>
+
+<script type="module">
+    import { db } from '../js/firebase-config.js';
+    import { collection, query, where, getDocs, doc, updateDoc, increment, addDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const myIdDoc = localStorage.getItem('userID_Doc'); 
+    const myLevel = Number(localStorage.getItem('userLevel')) || 1;
+    let verifiedTargetId = null;
+
+    // ১. নিজের ব্যালেন্স চেক
+    async function checkMyBalance() {
+        const mySnap = await getDoc(doc(db, "users", myIdDoc));
+        const bal = mySnap.data().wallet || 0;
+        document.getElementById('myBalDisplay').innerText = "₹ " + bal.toLocaleString();
+        return bal;
+    }
+
+    // ২. ইউজার আইডি দিয়ে সার্চ (Verify)
+    document.getElementById('verifyBtn').onclick = async () => {
+        const uId = document.getElementById('targetUserID').value.trim();
+        const msg = document.getElementById('statusMsg');
+        const preview = document.getElementById('receiverBox');
+
+        if(!uId) return alert("User ID দিন!");
+
+        msg.innerText = "Searching...";
+        preview.style.display = "none";
+
+        const q = query(collection(db, "users"), where("userID", "==", uId));
+        const snap = await getDocs(q);
+
+        if(snap.empty) {
+            msg.style.color = "#ff4d4d";
+            msg.innerText = "User ID পাওয়া যায়নি!";
+            document.getElementById('transferBtn').disabled = true;
+        } else {
+            const data = snap.docs[0].data();
+            verifiedTargetId = snap.docs[0].id; // Firestore Doc ID
+            
+            document.getElementById('recName').innerText = data.name;
+            document.getElementById('recSponsor').innerText = data.sponsorName || "Direct / No Sponsor";
+            preview.style.display = "block";
+            msg.innerText = "";
+            document.getElementById('transferBtn').disabled = false;
+        }
+    };
+
+    // ৩. ফাইনাল ট্রান্সফার লজিক
+    document.getElementById('transferBtn').onclick = async () => {
+        const amount = parseFloat(document.getElementById('transferAmount').value);
+        const msg = document.getElementById('statusMsg');
+        const btn = document.getElementById('transferBtn');
+
+        if(myLevel < 3) return alert("আপনি Level 3 মেম্বার নন!");
+        if(isNaN(amount) || amount < 1000 || amount > 100000) return alert("সর্বনিম্ন ১,০০০ এবং সর্বোচ্চ ১,০০,০০০ টাকা!");
+
+        btn.disabled = true;
+        msg.innerText = "Processing Transaction...";
+
+        try {
+            const currentBal = await checkMyBalance();
+            
+            // ২০,০০০ টাকা অবশিষ্ট রাখার নিয়ম
+            if((currentBal - amount) < 20000) {
+                msg.style.color = "#ff4d4d";
+                msg.innerText = "ব্যালেন্স কম! ২০,০০০ টাকা রেখে বাকিটা ট্রান্সফার করুন।";
+                btn.disabled = false;
+                return;
+            }
+
+            if(verifiedTargetId === myIdDoc) {
+                alert("নিজে নিজেকে টাকা পাঠানো সম্ভব নয়!");
+                btn.disabled = false;
+                return;
+            }
+
+            // ট্রানজেকশন শুরু
+            const myRef = doc(db, "users", myIdDoc);
+            const targetRef = doc(db, "users", verifiedTargetId);
+
+            await updateDoc(myRef, { wallet: increment(-amount) });
+            await updateDoc(targetRef, { wallet: increment(amount) });
+
+            // হিস্টরি সেভ
+            await addDoc(collection(db, "transactions"), {
+                senderId: myIdDoc,
+                receiverId: verifiedTargetId,
+                type: "Team_Transfer",
+                amount: amount,
+                timestamp: serverTimestamp(),
+                status: "Success"
+            });
+
+            msg.style.color = "#2ecc71";
+            msg.innerText = "Transaction Successful!";
+            document.getElementById('transferAmount').value = "";
+            checkMyBalance();
+
+        } catch (e) {
+            msg.innerText = "Error: " + e.message;
+        }
+        btn.disabled = false;
+    };
+
+    checkMyBalance();
+</script>
+
+</body>
+</html>

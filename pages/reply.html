@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>SmartSeva Admin Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+    <style>
+        body { display: flex; height: 100vh; margin: 0; font-family: sans-serif; background: #f1f2f6; }
+        #sidebar { width: 320px; background: white; border-right: 1px solid #ddd; overflow-y: auto; }
+        .sidebar-header { padding: 20px; background: #1a73e8; color: white; }
+        .chat-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .chat-item.active { background: #e8f0fe; border-left: 4px solid #1a73e8; }
+        #chat-area { flex: 1; display: flex; flex-direction: column; }
+        #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: white; }
+        .msg { padding: 10px; border-radius: 8px; max-width: 70%; }
+        .user { align-self: flex-start; background: #f1f2f6; }
+        .admin { align-self: flex-end; background: #1a73e8; color: white; }
+        .msg img { max-width: 100%; border-radius: 5px; }
+        #admin-input-area { padding: 15px; background: white; border-top: 1px solid #ddd; display: flex; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .rating-view { font-size: 12px; color: #f5c518; }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <div class="sidebar-header">Support Inbox</div>
+        <div id="chat-list"></div>
+    </div>
+
+    <div id="chat-area">
+        <div id="messages">ইউজার সিলেক্ট করুন...</div>
+        <div id="admin-input-area">
+            <input type="text" id="reply-input" placeholder="রিপ্লাই লিখুন..." oninput="sendAdminTyping()">
+            <button onclick="sendReply()" style="margin-left:10px; background:#1a73e8; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer;">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { /* আপনার Config */ };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let currentChatId = null;
+
+        db.collection("support_chats").orderBy("timestamp", "desc").onSnapshot(snap => {
+            const list = document.getElementById('chat-list');
+            list.innerHTML = "";
+            snap.forEach(doc => {
+                const data = doc.data();
+                const div = document.createElement('div');
+                div.className = `chat-item ${currentChatId === doc.id ? 'active' : ''}`;
+                div.innerHTML = `
+                    <strong>${data.customerName}</strong> 
+                    <span class="rating-view">${data.rating ? '★'+data.rating : ''}</span><br>
+                    <small>${data.lastMessage}</small>
+                `;
+                div.onclick = () => { currentChatId = doc.id; loadMessages(doc.id); };
+                list.appendChild(div);
+            });
+        });
+
+        function loadMessages(id) {
+            db.collection("support_chats").doc(id).collection("messages").orderBy("timestamp", "asc").onSnapshot(snap => {
+                const area = document.getElementById('messages');
+                area.innerHTML = "";
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const div = document.createElement('div');
+                    div.className = `msg ${d.sender}`;
+                    div.innerHTML = d.text;
+                    area.appendChild(div);
+                });
+                area.scrollTop = area.scrollHeight;
+            });
+        }
+
+        async function sendReply() {
+            const msg = document.getElementById('reply-input').value;
+            if (!msg || !currentChatId) return;
+            await db.collection("support_chats").doc(currentChatId).collection("messages").add({
+                text: msg, sender: "admin", timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            document.getElementById('reply-input').value = "";
+        }
+
+        function sendAdminTyping() {
+            if (!currentChatId) return;
+            db.collection("support_chats").doc(currentChatId).update({ adminTyping: true });
+            setTimeout(() => db.collection("support_chats").doc(currentChatId).update({ adminTyping: false }), 2000);
+        }
+    </script>
+</body>
+</html>

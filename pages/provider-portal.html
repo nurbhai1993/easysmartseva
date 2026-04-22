@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartSeva Provider Portal | Full Setup</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --secondary: #64748b; --bg: #f8fafc; --white: #ffffff; --border: #e2e8f0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
+        
+        .form-card { max-width: 950px; margin: auto; background: var(--white); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: var(--primary); color: white; padding: 30px; text-align: center; }
+        .header h2 { margin: 0; font-size: 26px; letter-spacing: -0.5px; }
+
+        .type-toggle { display: flex; justify-content: center; background: #f1f5f9; padding: 15px; gap: 10px; }
+        .toggle-btn { padding: 12px 35px; border: 2px solid var(--primary); cursor: pointer; font-weight: 700; border-radius: 6px; transition: 0.3s; }
+        .active { background: var(--primary); color: white; }
+        .inactive { background: white; color: var(--primary); }
+
+        .form-body { padding: 35px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .full { grid-column: span 2; }
+
+        .field-group { display: flex; flex-direction: column; gap: 8px; }
+        label { font-size: 12px; font-weight: 700; color: var(--secondary); text-transform: uppercase; }
+        input, select, textarea { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s; }
+        input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+        /* Price Box Styling */
+        .price-section { background: #eff6ff; padding: 20px; border-radius: 10px; grid-column: span 2; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; border: 1px inset #dbeafe; }
+
+        /* Spec Table Styling */
+        .spec-container { background: #fafafa; padding: 20px; border: 1px solid var(--border); border-radius: 8px; margin-top: 10px; }
+        .spec-table { width: 100%; border-collapse: collapse; }
+        .spec-table th { text-align: left; padding: 10px; font-size: 11px; color: var(--secondary); }
+        .spec-table td { padding: 8px; }
+        .btn-add-row { background: #e2e8f0; border: none; padding: 8px 15px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .btn-add-row:hover { background: #cbd5e1; }
+
+        .btn-publish { grid-column: span 2; background: #10b981; color: white; padding: 20px; border: none; border-radius: 8px; font-size: 18px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 20px; }
+        .btn-publish:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(16,185,129,0.3); }
+
+        .badge { display: inline-block; padding: 5px 12px; border-radius: 5px; font-size: 12px; font-weight: 700; margin-bottom: 10px; }
+        .prod-badge { background: #dbeafe; color: #1e40af; }
+        .serv-badge { background: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body>
+
+<div class="form-card">
+    <div class="header">
+        <h2>SmartSeva Admin Panel</h2>
+    </div>
+
+    <div class="type-toggle">
+        <div id="btnProd" class="toggle-btn active" onclick="switchForm('Product')">📦 PRODUCT</div>
+        <div id="btnServ" class="toggle-btn inactive" onclick="switchForm('Service')">🛠️ SERVICE</div>
+    </div>
+
+    <form id="mainForm" class="form-body">
+        <div class="full">
+            <span id="formIndicator" class="badge prod-badge">ADDING: PHYSICAL PRODUCT</span>
+        </div>
+
+        <div class="field-group full">
+            <label>Product / Service Name</label>
+            <input type="text" id="itemName" placeholder="e.g. Samsung Galaxy S24 or Home Cleaning" required>
+        </div>
+
+        <div class="field-group">
+            <label>Service Provider / Brand</label>
+            <input type="text" id="providerName" required>
+        </div>
+
+        <div class="field-group" id="hsnGroup">
+            <label>HSN Code</label>
+            <input type="text" id="hsn">
+        </div>
+
+        <div class="field-group full">
+            <label>Short Description (1 Line)</label>
+            <input type="text" id="description" placeholder="Short catchphrase...">
+        </div>
+
+        <div class="price-section">
+            <div class="field-group">
+                <label>MRP (₹)</label>
+                <input type="number" id="mrp" oninput="calcDiscount()">
+            </div>
+            <div class="field-group">
+                <label>Sale Price (₹)</label>
+                <input type="number" id="price" oninput="calcDiscount()">
+            </div>
+            <div class="field-group">
+                <label>Discount</label>
+                <input type="text" id="discount" readonly style="color: #dc2626; font-weight: 800; border:none; background:transparent;">
+            </div>
+        </div>
+
+        <div class="full spec-container">
+            <label>Step-by-Step Specifications</label>
+            <table class="spec-table">
+                <thead>
+                    <tr>
+                        <th>Label (e.g. Color)</th>
+                        <th>Details (e.g. Jet Black)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="specBody">
+                    <tr>
+                        <td><input type="text" class="spec-label" placeholder="Feature"></td>
+                        <td><input type="text" class="spec-value" placeholder="Value"></td>
+                        <td><button type="button" onclick="removeRow(this)" style="color:red; border:none; background:none; cursor:pointer;">✖</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" class="btn-add-row" onclick="addSpecRow()">+ Add Specification Row</button>
+        </div>
+
+        <div class="field-group">
+            <label>Offer End Time</label>
+            <input type="datetime-local" id="endTime">
+        </div>
+
+        <div class="field-group">
+            <label>Initial Rating</label>
+            <select id="rating">
+                <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                <option value="3">⭐⭐⭐ (3/5)</option>
+            </select>
+        </div>
+
+        <div class="field-group full">
+            <label>Featured Feedback / Detail Info</label>
+            <textarea id="details" rows="4" placeholder="Full details and customer feedback..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-publish">🚀 PUBLISH ITEM TO MARKETPLACE</button>
+    </form>
+</div>
+
+<script type="module">
+    // Link to your firebase-config.js
+    import { rtdb, ref, push } from "./firebase-config.js";
+
+    let currentType = "Product";
+
+    // 1. Switch Logic
+    window.switchForm = function(type) {
+        currentType = type;
+        const indicator = document.getElementById('formIndicator');
+        const hsnGroup = document.getElementById('hsnGroup');
+        
+        document.getElementById('btnProd').className = type === 'Product' ? "toggle-btn active" : "toggle-btn inactive";
+        document.getElementById('btnServ').className = type === 'Service' ? "toggle-btn active" : "toggle-btn inactive";
+        
+        indicator.innerText = type === 'Product' ? "ADDING: PHYSICAL PRODUCT" : "ADDING: SERVICE PROVIDER";
+        indicator.className = type === 'Product' ? "badge prod-badge" : "badge serv-badge";
+        hsnGroup.style.display = type === 'Product' ? "flex" : "none";
+    }
+
+    // 2. Discount Calculation
+    window.calcDiscount = function() {
+        const mrp = parseFloat(document.getElementById('mrp').value) || 0;
+        const price = parseFloat(document.getElementById('price').value) || 0;
+        if(mrp > 0 && price > 0) {
+            const d = ((mrp - price) / mrp) * 100;
+            document.getElementById('discount').value = d.toFixed(0) + "% OFF";
+        }
+    }
+
+    // 3. Dynamic Row Logic
+    window.addSpecRow = function() {
+        const row = `<tr>
+            <td><input type="text" class="spec-label"></td>
+            <td><input type="text" class="spec-value"></td>
+            <td><button type="button" onclick="removeRow(this)" style="color:red; border:none; background:none; cursor:pointer;">✖</button></td>
+        </tr>`;
+        document.getElementById('specBody').insertAdjacentHTML('beforeend', row);
+    }
+    window.removeRow = (btn) => btn.closest('tr').remove();
+
+    // 4. Submit to Firebase
+    document.getElementById('mainForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        // Collect Specs Table
+        let specs = {};
+        document.querySelectorAll('#specBody tr').forEach(row => {
+            const k = row.querySelector('.spec-label').value;
+            const v = row.querySelector('.spec-value').value;
+            if(k) specs[k] = v;
+        });
+
+        const formData = {
+            type: currentType,
+            name: document.getElementById('itemName').value,
+            provider: document.getElementById('providerName').value,
+            hsn: document.getElementById('hsn').value || "N/A",
+            description: document.getElementById('description').value,
+            mrp: document.getElementById('mrp').value,
+            price: document.getElementById('price').value,
+            discount: document.getElementById('discount').value,
+            specifications: specs,
+            offerEnd: document.getElementById('endTime').value,
+            rating: document.getElementById('rating').value,
+            details: document.getElementById('details').value,
+            createdAt: Date.now()
+        };
+
+        const path = currentType === 'Product' ? 'marketplace/products' : 'marketplace/services';
+        push(ref(rtdb, path), formData).then(() => {
+            alert("Data Published Successfully!");
+            location.reload(); // Refresh to clear
+        }).catch(err => alert(err.message));
+    });
+</script>
+
+</body>
+</html>

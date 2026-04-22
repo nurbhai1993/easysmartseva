@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --gold: #FFD700; --card-bg: rgba(255, 255, 255, 0.05); --border: rgba(255,215,0,0.2); }
+        body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        
+        .rank-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 30px; }
+        .rank-card { 
+            background: var(--card-bg); border: 1px solid var(--border); 
+            border-radius: 20px; padding: 25px; position: relative;
+        }
+
+        .title-bar { border-left: 4px solid var(--gold); padding-left: 15px; margin-bottom: 20px; }
+        .section-header { font-size: 14px; color: var(--gold); margin: 20px 0 10px; display: flex; justify-content: space-between; align-items: center; }
+
+        .row-item { display: flex; gap: 10px; margin-bottom: 10px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px; align-items: center; }
+        input { 
+            background: rgba(255,255,255,0.05); border: 1px solid #334155; color: white; 
+            padding: 8px 12px; border-radius: 6px; outline: none; width: 100%;
+        }
+        input:focus { border-color: var(--gold); }
+
+        .btn-add { background: rgba(46, 204, 113, 0.1); color: #2ecc71; border: 1px solid #2ecc71; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .btn-del { background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid #e74c3c; padding: 8px; border-radius: 6px; cursor: pointer; }
+        .btn-save { background: var(--gold); color: black; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 25px; font-size: 16px; transition: 0.3s; }
+        .btn-save:hover { background: #eab308; transform: translateY(-2px); }
+        
+        .time-box { background: rgba(255, 215, 0, 0.05); border: 1px dashed var(--gold); padding: 10px; border-radius: 10px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <div>
+            <h1 style="color: var(--gold); margin: 0;">Rank Configuration Panel</h1>
+            <p style="color: #64748b; margin-top: 5px;">র‍্যাঙ্ক প্রমোশন শর্ত, সময়সীমা এবং সার্ভিস কমিশন সেট করুন</p>
+        </div>
+        <button onclick="window.addNewLevel()" class="btn-add" style="font-size: 14px; padding: 12px 20px;">+ Create New Rank Level</button>
+    </div>
+
+    <div class="rank-grid" id="rankContainer"></div>
+
+    <script type="module">
+        import { db } from '../js/firebase-config.js';
+        import { collection, getDocs, doc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // ১. ডাটা লোড করা
+        async function loadRanks() {
+            try {
+                const q = query(collection(db, "rank_settings"), orderBy("level", "asc"));
+                const querySnapshot = await getDocs(q);
+                const container = document.getElementById('rankContainer');
+                container.innerHTML = "";
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const id = docSnap.id;
+                    const criterias = data.criterias || [];
+                    const serviceComms = data.serviceComms || []; 
+                    const timeLimit = data.timeLimit || 0;
+
+                    const card = document.createElement('div');
+                    card.className = 'rank-card';
+                    card.innerHTML = `
+                        <div class="title-bar">
+                            <small style="color: #888;">RANK LEVEL ${data.level}</small>
+                            <input type="text" id="title_${id}" value="${data.title}" placeholder="Rank Name" style="font-size: 18px; font-weight: bold; border: none; background: transparent; padding: 0;">
+                        </div>
+
+                        <div class="section-header"><span><i class="fas fa-clock"></i> PROMOTION DEADLINE</span></div>
+                        <div class="time-box">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="number" id="time_${id}" value="${timeLimit}" placeholder="Days (e.g. 180)">
+                                <span style="color: var(--gold); min-width: 40px;">Days</span>
+                            </div>
+                        </div>
+
+                        <div class="section-header">
+                            <span><i class="fas fa-tasks"></i> CRITERIA (Rule | Count)</span>
+                            <button class="btn-add" onclick="window.addRow('${id}', 'crit')">+ Add</button>
+                        </div>
+                        <div id="crit_list_${id}">
+                            ${criterias.map((c, i) => `
+                                <div class="row-item">
+                                    <input type="text" class="crit-name-${id}" value="${c.name || ''}" placeholder="Rule Name" style="flex: 2;">
+                                    <input type="number" class="crit-count-${id}" value="${c.count || 0}" placeholder="Qty" style="flex: 1;">
+                                    <button class="btn-del" onclick="this.parentElement.remove()">×</button>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="section-header">
+                            <span><i class="fas fa-hand-holding-usd"></i> SERVICE COMMISSIONS</span>
+                            <button class="btn-add" onclick="window.addRow('${id}', 'srv')">+ Add</button>
+                        </div>
+                        <div id="srv_list_${id}">
+                            ${serviceComms.map((s) => `
+                                <div class="row-item">
+                                    <input type="text" class="srv-name-${id}" value="${s.name}" placeholder="Service" style="flex: 2;">
+                                    <input type="number" step="0.01" class="srv-rate-${id}" value="${s.rate}" placeholder="%" style="flex: 1;">
+                                    <button class="btn-del" onclick="this.parentElement.remove()">×</button>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <button class="btn-save" onclick="window.saveData('${id}', ${data.level})">SAVE ALL CONFIGURATION</button>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) { console.error("Load Error: ", err); }
+        }
+
+        // ২. নতুন রো (Criteria বা Service) যোগ করা
+        window.addRow = (id, type) => {
+            const list = document.getElementById(type === 'crit' ? `crit_list_${id}` : `srv_list_${id}`);
+            const div = document.createElement('div');
+            div.className = 'row-item';
+            
+            if(type === 'crit') {
+                div.innerHTML = `
+                    <input type="text" class="crit-name-${id}" placeholder="Condition Name" style="flex: 2;">
+                    <input type="number" class="crit-count-${id}" placeholder="Count" style="flex: 1;">
+                    <button class="btn-del" onclick="this.parentElement.remove()">×</button>`;
+            } else {
+                div.innerHTML = `
+                    <input type="text" class="srv-name-${id}" placeholder="Service Name" style="flex: 2;">
+                    <input type="number" step="0.01" class="srv-rate-${id}" placeholder="%" style="flex: 1;">
+                    <button class="btn-del" onclick="this.parentElement.remove()">×</button>`;
+            }
+            list.appendChild(div);
+        }
+
+        // ৩. ফায়ারবেসে ডাটা সেভ করা
+        window.saveData = async (id, level) => {
+            const title = document.getElementById(`title_${id}`).value;
+            const timeLimit = document.getElementById(`time_${id}`).value;
+            
+            // Criteria ডাটা গুছানো
+            const cNames = document.querySelectorAll(`.crit-name-${id}`);
+            const cCounts = document.querySelectorAll(`.crit-count-${id}`);
+            const criterias = [];
+            cNames.forEach((n, i) => {
+                if(n.value.trim() !== "") {
+                    criterias.push({ name: n.value.trim(), count: parseInt(cCounts[i].value || 0) });
+                }
+            });
+
+            // Service ডাটা গুছানো
+            const sNames = document.querySelectorAll(`.srv-name-${id}`);
+            const sRates = document.querySelectorAll(`.srv-rate-${id}`);
+            const serviceComms = [];
+            sNames.forEach((n, i) => {
+                if(n.value.trim() !== "") {
+                    serviceComms.push({ name: n.value.trim(), rate: parseFloat(sRates[i].value || 0) });
+                }
+            });
+
+            try {
+                await setDoc(doc(db, "rank_settings", id), {
+                    level: parseInt(level),
+                    title: title,
+                    timeLimit: parseInt(timeLimit || 0),
+                    criterias: criterias,
+                    serviceComms: serviceComms
+                });
+                alert("Rank Level " + level + " Settings Saved!");
+                loadRanks();
+            } catch (err) { alert("Error: " + err.message); }
+        }
+
+        // ৪. নতুন লেভেল তৈরি করা
+        window.addNewLevel = async () => {
+            const lvl = prompt("Enter New Rank Level (e.g. 1):");
+            if(!lvl) return;
+            const id = "rank_" + lvl;
+            try {
+                await setDoc(doc(db, "rank_settings", id), {
+                    level: parseInt(lvl),
+                    title: "New Rank Title",
+                    timeLimit: 180, // Default 6 months
+                    criterias: [],
+                    serviceComms: []
+                });
+                loadRanks();
+            } catch (err) { alert(err.message); }
+        }
+
+        window.onload = loadRanks;
+    </script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced Service Manager - CEO</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --gold: #FFD700; --dark: #002d28; --input: #003d35; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .box { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,215,0,0.2); margin-bottom: 20px; }
+        h2 { color: var(--gold); margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; }
+        
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        input, select { padding: 12px; border-radius: 8px; border: 1px solid #444; background: var(--input); color: white; width: 100%; box-sizing: border-box; }
+        
+        .btn-main { background: var(--gold); color: var(--dark); border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(255,215,0,0.3); }
+
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: rgba(0,0,0,0.2); }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #333; }
+        th { color: var(--gold); background: rgba(255,215,0,0.05); }
+        .cat-row { background: #004d40; font-weight: bold; color: var(--gold); }
+        .action-btns button { background: none; border: none; color: #ff4d4d; cursor: pointer; margin-left: 10px; }
+        .edit-btn { color: var(--gold) !important; }
+
+        /* Status Badge */
+        .profit-badge { background: #8aff8a; color: #002d28; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="container" style="max-width: 1100px; margin: 0 auto;">
+    <div class="box">
+        <h2><i class="fas fa-plus-circle"></i> সার্ভিস ও ফি ম্যানেজমেন্ট</h2>
+        <div class="form-row">
+            <select id="selectCat">
+                <option value="">ক্যাটাগরি সিলেক্ট করুন</option>
+            </select>
+            <input type="text" id="serviceName" placeholder="সার্ভিসের নাম">
+            <input type="number" id="serviceCost" placeholder="টোটাল কস্ট (₹)">
+            <input type="number" id="platformFee" placeholder="প্ল্যাটফর্ম ফি (₹)">
+            </div>
+        <button class="btn-main" id="saveServiceBtn">সার্ভিস সেভ করুন</button>
+        <button class="btn-main" style="background: #00897b; color:white;" onclick="addCategory()">+ নতুন ক্যাটাগরি</button>
+    </div>
+
+    <div class="box">
+        <h3>সার্ভিস লিস্ট এবং রেট চার্ট</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>সার্ভিসের নাম</th>
+                    <th>টোটাল কস্ট</th>
+                    <th>প্ল্যাটফর্ম ফি</th>
+                    <th>ওয়ার্কার পাবে</th>
+                    <th>অ্যাকশন</th>
+                </tr>
+            </thead>
+            <tbody id="serviceTableBody">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, deleteDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCzv1cwnfrhw7Ph5sTb-Kt_RS1q6Cpfhbo",
+        authDomain: "smartseva-connect.firebaseapp.com",
+        projectId: "smartseva-connect",
+        storageBucket: "smartseva-connect.firebasestorage.app",
+        messagingSenderId: "829136094605",
+        appId: "1:829136094605:web:82b07d722959dabcf729c4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const adminID = localStorage.getItem('userID') || "CEO-ADMIN";
+
+    // ১. নতুন ক্যাটাগরি অ্যাড করা
+    window.addCategory = async () => {
+        const catName = prompt("নতুন ক্যাটাগরির নাম লিখুন (যেমন: ইলেকট্রিশিয়ান, ড্রাইভার):");
+        if(catName) {
+            await addDoc(collection(db, "categories"), { name: catName });
+            alert("ক্যাটাগরি তৈরি হয়েছে।");
+        }
+    };
+
+    // ২. ড্রপডাউনে ক্যাটাগরি লোড করা
+    onSnapshot(collection(db, "categories"), (snapshot) => {
+        const select = document.getElementById('selectCat');
+        select.innerHTML = '<option value="">ক্যাটাগরি সিলেক্ট করুন</option>';
+        snapshot.forEach(d => {
+            select.innerHTML += `<option value="${d.data().name}">${d.data().name}</option>`;
+        });
+    });
+
+    // ৩. সার্ভিস সেভ করা
+    document.getElementById('saveServiceBtn').onclick = async () => {
+        const cat = document.getElementById('selectCat').value;
+        const name = document.getElementById('serviceName').value;
+        const cost = Number(document.getElementById('serviceCost').value);
+        const fee = Number(document.getElementById('platformFee').value);
+
+        if(!cat || !name || !cost) return alert("সবগুলো ঘর পূরণ করুন!");
+
+        await addDoc(collection(db, "services"), {
+            category: cat,
+            serviceName: name,
+            serviceCost: cost,
+            platformFee: fee,
+            workerEarning: cost - fee,
+            timestamp: serverTimestamp(),
+            lastModifiedBy: adminID
+        });
+
+        alert("সার্ভিস সফলভাবে যুক্ত হয়েছে।");
+        document.getElementById('serviceName').value = "";
+        document.getElementById('serviceCost').value = "";
+        document.getElementById('platformFee').value = "";
+    };
+
+    // ৪. টেবিল প্রদর্শন (Real-time)
+    const q = query(collection(db, "services"), orderBy("category"));
+    onSnapshot(q, (snapshot) => {
+        const tbody = document.getElementById('serviceTableBody');
+        tbody.innerHTML = "";
+        let currentCat = "";
+
+        snapshot.forEach(d => {
+            const s = d.data();
+            // ক্যাটাগরি রো দেখানো
+            if(s.category !== currentCat) {
+                currentCat = s.category;
+                tbody.innerHTML += `<tr class="cat-row"><td colspan="5"><i class="fas fa-folder"></i> ${currentCat}</td></tr>`;
+            }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${s.serviceName}</td>
+                    <td>₹${s.serviceCost}</td>
+                    <td>₹${s.platformFee}</td>
+                    <td><span class="profit-badge">₹${s.workerEarning}</span></td>
+                    <td class="action-btns">
+                        <button class="edit-btn" onclick="editService('${d.id}')"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteService('${d.id}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+    });
+
+    // ৫. ডিলিট ফাংশন
+    window.deleteService = async (id) => {
+        if(confirm("আপনি কি এটি ডিলিট করতে চান?")) {
+            await deleteDoc(doc(db, "services", id));
+        }
+    };
+</script>
+</body>
+</html>

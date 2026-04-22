@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Expert Onboarding - SmartSeva</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --gold: #c5a059; --dark: #121212; --card: #1e1e1e; }
+        body { background: var(--dark); color: #fff; font-family: 'Poppins', sans-serif; padding: 20px; }
+        .master-card { background: var(--card); max-width: 1100px; margin: auto; padding: 35px; border-radius: 20px; border-top: 5px solid var(--gold); }
+        
+        /* Selfie Camera Styles */
+        .camera-box { text-align: center; background: #262626; padding: 20px; border-radius: 15px; grid-column: span 3; border: 1px dashed var(--gold); }
+        #video { width: 100%; max-width: 320px; border-radius: 10px; background: #000; display: none; }
+        #canvas { display: none; }
+        #photo-preview { width: 100%; max-width: 200px; border-radius: 50%; border: 3px solid var(--gold); display: none; margin: 10px auto; }
+        .cam-btn { background: var(--gold); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 5px; }
+
+        .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .section-title { grid-column: span 3; color: var(--gold); border-left: 4px solid var(--gold); padding-left: 10px; margin-top: 25px; font-weight: bold; background: #262626; padding: 8px; }
+        input, select, textarea { width: 100%; padding: 12px; background: #2b2b2b; border: 1px solid #333; border-radius: 8px; color: #fff; box-sizing: border-box; }
+        .submit-btn { width: 100%; padding: 20px; background: var(--gold); border: none; border-radius: 50px; font-weight: 800; font-size: 18px; cursor: pointer; margin-top: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="master-card">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="color: var(--gold);">EXPERT MASTER REGISTRATION</h2>
+        <p>Complete your Indian Expert Profile with Live Verification</p>
+    </div>
+
+    <form id="masterForm">
+        <div class="form-grid">
+            
+            <div class="section-title">১. লাইভ ভেরিফিকেশন (Live Selfie)</div>
+            <div class="camera-box">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="canvas" width="320" height="240"></canvas>
+                <img id="photo-preview" alt="Selfie Preview">
+                <br>
+                <button type="button" class="cam-btn" id="startCam"><i class="fas fa-camera"></i> Open Camera</button>
+                <button type="button" class="cam-btn" id="capture" style="display:none;"><i class="fas fa-circle"></i> Capture Photo</button>
+                <p id="cam-status" style="font-size: 12px; color: #888;">* Upload a clear face photo for identity verification</p>
+            </div>
+
+            <div class="section-title">২. ব্যক্তিগত ও ভারতীয় পরিচয়পত্র (Identity)</div>
+            <input type="text" id="name" placeholder="Full Name (As per Aadhar)" required>
+            <input type="tel" id="mobile" placeholder="Mobile (WhatsApp)" required>
+            <select id="blood">
+                <option value="">Blood Group</option>
+                <option value="A+">A+</option><option value="B+">B+</option><option value="O+">O+</option><option value="AB+">AB+</option>
+            </select>
+            <input type="text" id="aadhar" placeholder="Aadhar Number (12 Digit)" required>
+            <input type="text" id="pan" placeholder="PAN Card Number (Optional)">
+            <input type="text" id="nationality" value="Indian" readonly>
+
+            <div class="section-title">৩. দক্ষতা ও যোগ্যতা (Professional)</div>
+            <select id="category" required>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Technical">Technical/IT</option>
+                <option value="HomeService">Home Service</option>
+                <option value="Automobile">Automobile</option>
+            </select>
+            <input type="text" id="job" placeholder="Specialization (e.g. Electrician)" required>
+            <input type="number" id="exp" placeholder="Years of Experience" required>
+
+            <div class="section-title">৪. শিক্ষা ও নথিপত্র (Education & Bio-Data)</div>
+            <input type="text" id="degree" placeholder="Highest Qualification" required>
+            <input type="text" id="university" placeholder="Board/University" required>
+            <div style="grid-column: span 2;">
+                <label style="font-size: 12px; color: var(--gold);">Upload Bio-Data (PDF)</label>
+                <input type="file" id="resume" accept=".pdf">
+            </div>
+
+            <textarea id="address" class="full-width" rows="2" placeholder="Full Permanent Address (with Pin Code)"></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn" id="saveBtn">SUBMIT VERIFIED PROFILE</button>
+    </form>
+</div>
+
+<script>
+    // --- CAMERA LOGIC ---
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const photoPreview = document.getElementById('photo-preview');
+    const startCamBtn = document.getElementById('startCam');
+    const captureBtn = document.getElementById('capture');
+    let capturedImageBlob = null;
+
+    startCamBtn.onclick = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        video.style.display = 'block';
+        captureBtn.style.display = 'inline-block';
+        startCamBtn.style.display = 'none';
+        photoPreview.style.display = 'none';
+    };
+
+    captureBtn.onclick = () => {
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, 320, 240);
+        canvas.toBlob((blob) => {
+            capturedImageBlob = blob;
+            const url = URL.createObjectURL(blob);
+            photoPreview.src = url;
+            photoPreview.style.display = 'block';
+            video.style.display = 'none';
+            captureBtn.style.display = 'none';
+            startCamBtn.style.display = 'inline-block';
+            startCamBtn.innerText = "Retake Photo";
+            // ভিডিও অফ করা
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }, 'image/jpeg');
+    };
+
+    // --- SUBMIT TO FIREBASE ---
+    document.getElementById('masterForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('saveBtn');
+        btn.innerText = "Uploading Documents...";
+        btn.disabled = true;
+
+        try {
+            // ১. সেলফি আপলোড (Storage)
+            let selfieUrl = "";
+            if(capturedImageBlob) {
+                const selfieRef = firebase.storage().ref('selfies/' + Date.now() + ".jpg");
+                await selfieRef.put(capturedImageBlob);
+                selfieUrl = await selfieRef.getDownloadURL();
+            }
+
+            // ২. রেজুমে আপলোড
+            const resumeFile = document.getElementById('resume').files[0];
+            let resumeUrl = "";
+            if(resumeFile) {
+                const resRef = firebase.storage().ref('resumes/' + Date.now() + "_" + resumeFile.name);
+                await resRef.put(resumeFile);
+                resumeUrl = await resRef.getDownloadURL();
+            }
+
+            // ৩. ডাটাবেসে সেভ
+            const fullData = {
+                name: document.getElementById('name').value,
+                mobile: document.getElementById('mobile').value,
+                aadhar: document.getElementById('aadhar').value,
+                category: document.getElementById('category').value,
+                job: document.getElementById('job').value,
+                experience: document.getElementById('exp').value,
+                selfie: selfieUrl,
+                resume: resumeUrl,
+                status: "Pending Verification",
+                timestamp: new Date().toISOString()
+            };
+
+            await db.collection("experts").add(fullData);
+            alert("সফলভাবে মাস্টার প্রোফাইল জমা হয়েছে!");
+            location.reload();
+
+        } catch (error) {
+            alert("Error: " + error.message);
+            btn.disabled = false;
+        }
+    };
+</script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>SmartSeva Support - Pro</title>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-storage-compat.js"></script>
+    <style>
+        /* Modern UI Design */
+        #chat-launcher { position: fixed; bottom: 20px; right: 20px; background: #1a73e8; color: white; padding: 15px 25px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 1000; font-family: sans-serif; font-weight: bold; }
+        #chat-box { position: fixed; bottom: 85px; right: 20px; width: 360px; height: 550px; background: white; border-radius: 15px; display: none; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1000; overflow: hidden; font-family: sans-serif; }
+        #chat-header { background: #1a73e8; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        #chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f9f9f9; }
+        .msg { padding: 10px 14px; border-radius: 15px; max-width: 80%; font-size: 14px; position: relative; }
+        .user { align-self: flex-end; background: #1a73e8; color: white; border-bottom-right-radius: 2px; }
+        .admin { align-self: flex-start; background: #e5e7eb; color: #333; border-bottom-left-radius: 2px; }
+        .msg img { max-width: 100%; border-radius: 10px; margin-top: 5px; }
+        #typing-status { font-size: 11px; color: #888; margin-bottom: 5px; display: none; }
+        
+        /* Feedback UI */
+        #feedback-area { padding: 20px; text-align: center; display: none; }
+        .star { cursor: pointer; font-size: 25px; color: #ddd; }
+        .star.selected { color: #f5c518; }
+
+        #chat-input-area { border-top: 1px solid #eee; padding: 12px; display: flex; gap: 8px; align-items: center; }
+        #user-input { flex: 1; border: 1px solid #ddd; border-radius: 20px; padding: 8px 15px; outline: none; }
+        .icon-btn { cursor: pointer; color: #666; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+    <div id="chat-launcher" onclick="toggleChat()">💬 Support</div>
+
+    <div id="chat-box">
+        <div id="chat-header">
+            <strong>SmartSeva Connect</strong>
+            <button onclick="endChat()" style="background:#ff4757; border:none; color:white; padding:4px 8px; border-radius:5px; font-size:11px; cursor:pointer;">End Chat</button>
+        </div>
+        
+        <div id="chat-messages"></div>
+        <div id="typing-status">এজেন্ট টাইপ করছেন...</div>
+
+        <div id="feedback-area">
+            <h4>আমাদের সাপোর্ট কেমন ছিল?</h4>
+            <div id="stars">
+                <span class="star" onclick="setRating(1)">★</span>
+                <span class="star" onclick="setRating(2)">★</span>
+                <span class="star" onclick="setRating(3)">★</span>
+                <span class="star" onclick="setRating(4)">★</span>
+                <span class="star" onclick="setRating(5)">★</span>
+            </div>
+            <button onclick="submitFeedback()" style="margin-top:10px; background:#1a73e8; color:white; border:none; padding:8px 20px; border-radius:5px;">Submit</button>
+        </div>
+
+        <div id="chat-input-area">
+            <label for="img-upload" class="icon-btn">📎</label>
+            <input type="file" id="img-upload" hidden accept="image/*" onchange="uploadImage(this)">
+            <input type="text" id="user-input" placeholder="লিখুন..." oninput="sendTypingStatus()">
+            <button id="send-btn" onclick="sendMessage()" style="background:none; border:none; color:#1a73e8; font-size:22px; cursor:pointer;">➤</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzv1cwnfrhw7Ph5sTb-Kt_RS1q6Cpfhbo",
+            authDomain: "smartseva-connect.firebaseapp.com",
+            projectId: "smartseva-connect",
+            storageBucket: "smartseva-connect.firebasestorage.app",
+            messagingSenderId: "829136094605",
+            appId: "1:829136094605:web:82b07d722959dabcf729c4"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        
+        let chatId, currentUser, rating = 0;
+
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                chatId = user.uid;
+                currentUser = { name: user.displayName || user.email, type: "Member" };
+            } else {
+                if (!sessionStorage.getItem('guestId')) sessionStorage.setItem('guestId', "guest_" + Date.now());
+                chatId = sessionStorage.getItem('guestId');
+                currentUser = { name: "Guest", type: "Guest" };
+            }
+            listenMessages();
+            listenTyping();
+        });
+
+        // ১. মেসেজ পাঠানো
+        async function sendMessage() {
+            const text = document.getElementById('user-input').value.trim();
+            if (!text) return;
+            saveMessage(text, 'user');
+            document.getElementById('user-input').value = "";
+        }
+
+        // ২. ইমেজ আপলোড
+        async function uploadImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const path = `chats/${chatId}/${Date.now()}_${file.name}`;
+            const snap = await storage.ref(path).put(file);
+            const url = await snap.ref.getDownloadURL();
+            saveMessage(`<img src="${url}">`, 'user');
+        }
+
+        async function saveMessage(content, sender) {
+            await db.collection("support_chats").doc(chatId).collection("messages").add({
+                text: content, sender: sender, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            await db.collection("support_chats").doc(chatId).set({
+                customerName: currentUser.name, lastMessage: content.includes('<img') ? '📷 Image' : content,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: 'active'
+            }, { merge: true });
+        }
+
+        // ৩. টাইপিং ইন্ডিকেটর
+        function sendTypingStatus() {
+            db.collection("support_chats").doc(chatId).update({ userTyping: true });
+            setTimeout(() => db.collection("support_chats").doc(chatId).update({ userTyping: false }), 2000);
+        }
+
+        function listenTyping() {
+            db.collection("support_chats").doc(chatId).onSnapshot(doc => {
+                if (doc.exists() && doc.data().adminTyping) {
+                    document.getElementById('typing-status').style.display = 'block';
+                } else {
+                    document.getElementById('typing-status').style.display = 'none';
+                }
+            });
+        }
+
+        // ৪. রেটিং ও ফিডব্যাক
+        function endChat() {
+            document.getElementById('chat-messages').style.display = 'none';
+            document.getElementById('chat-input-area').style.display = 'none';
+            document.getElementById('feedback-area').style.display = 'block';
+        }
+
+        function setRating(val) {
+            rating = val;
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((s, i) => s.classList.toggle('selected', i < val));
+        }
+
+        async function submitFeedback() {
+            await db.collection("support_chats").doc(chatId).update({ rating: rating, status: 'closed' });
+            alert("মতামতের জন্য ধন্যবাদ!");
+            toggleChat();
+        }
+
+        function toggleChat() {
+            const box = document.getElementById('chat-box');
+            box.style.display = box.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function listenMessages() {
+            db.collection("support_chats").doc(chatId).collection("messages").orderBy("timestamp", "asc").onSnapshot(snap => {
+                const area = document.getElementById('chat-messages');
+                area.innerHTML = "";
+                snap.forEach(doc => {
+                    const div = document.createElement('div');
+                    div.className = `msg ${doc.data().sender}`;
+                    div.innerHTML = doc.data().text;
+                    area.appendChild(div);
+                });
+                area.scrollTop = area.scrollHeight;
+            });
+        }
+    </script>
+</body>
+</html>

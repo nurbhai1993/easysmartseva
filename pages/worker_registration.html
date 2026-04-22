@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Registration | SmartSeva Connect</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../css/worker_style.css">
+</head>
+
+<body>
+    <script type="module" src="../js/worker_reg.js"></script>
+<div class="container py-5">
+    <div class="registration-card">
+        <div class="header-box text-center">
+            <h2 class="fw-bold text-gold">WORKER REGISTRATION</h2>
+            <p class="text-white-50">Sponsor ID: <b id="autoSponsorId" class="text-warning">...</b></p>
+        </div>
+
+        <form id="registrationForm">
+            <div class="section-header"><i class="fas fa-user-edit"></i> Personal Information</div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label>Full Name</label>
+                    <input type="text" id="fullName" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label>C/O (Care of)</label>
+                    <input type="text" id="co" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label>Date of Birth</label>
+                    <input type="date" id="dob" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label>Mobile Number</label>
+                    <input type="tel" id="mobile" class="form-control check-db" data-field="personal.mobile" required>
+                </div>
+                <div class="col-md-8">
+                    <label>Email Address</label>
+                    <input type="email" id="email" class="form-control check-db" data-field="personal.email" required>
+                </div>
+            </div>
+
+            <div class="section-header"><i class="fas fa-map-marked-alt"></i> Permanent Address</div>
+            <div class="row g-3">
+                <div class="col-md-3"><input type="text" id="para" placeholder="Para/House" class="form-control" required></div>
+                <div class="col-md-3"><input type="text" id="vill" placeholder="Village" class="form-control" required></div>
+                <div class="col-md-3"><input type="text" id="po" placeholder="Post Office" class="form-control" required></div>
+                <div class="col-md-3"><input type="text" id="ps" placeholder="Police Station" class="form-control" required></div>
+                <div class="col-md-4"><input type="text" id="dist" placeholder="District" class="form-control" required></div>
+                <div class="col-md-4"><input type="text" id="state" placeholder="State" class="form-control" required></div>
+                <div class="col-md-4"><input type="text" id="pin" placeholder="PIN Code" class="form-control" required></div>
+            </div>
+
+            <div class="section-header"><i class="fas fa-user-graduate"></i> Educational Qualification (Max 10)</div>
+            <div class="table-responsive">
+                <table class="table table-dark table-sm border-secondary">
+                    <thead>
+                        <tr class="small text-gold">
+                            <th>Degree</th>
+                            <th>Board/Univ</th>
+                            <th>Year</th>
+                            <th>Result</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="qualBody">
+                        <tr>
+                            <td><input type="text" class="q-level form-control" required></td>
+                            <td><input type="text" class="q-board form-control" required></td>
+                            <td><input type="number" class="q-year form-control" required></td>
+                            <td><input type="text" class="q-res form-control" required></td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="btn btn-sm btn-outline-warning" onclick="addQualRow()">+ Add More</button>
+            </div>
+
+            <div class="section-header"><i class="fas fa-language"></i> Language Skills</div>
+            <div class="table-responsive">
+                <table class="table table-dark table-sm text-center">
+                    <thead>
+                        <tr class="text-gold">
+                            <th class="text-start">Language</th>
+                            <th>Read</th>
+                            <th>Write</th>
+                            <th>Speak</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="text-start">English</td>
+                            <td><input type="checkbox" class="lang-check" data-lang="English" data-skill="Read"></td>
+                            <td><input type="checkbox" class="lang-check" data-lang="English" data-skill="Write"></td>
+                            <td><input type="checkbox" class="lang-check" data-lang="English" data-skill="Speak"></td>
+                        </tr>
+                        <tr><td class="text-start">Hindi</td>
+                            <td><input type="checkbox" class="lang-check" data-lang="Hindi" data-skill="Read"></td>
+                            <td><input type="checkbox" class="lang-check" data-lang="Hindi" data-skill="Write"></td>
+                            <td><input type="checkbox" class="lang-check" data-lang="Hindi" data-skill="Speak"></td>
+                        </tr>
+                        <tr><td class="text-start">Bangla</td>
+                            <td><input type="checkbox" class="lang-check" data-lang="Bangla" data-skill="Read"></td>
+                            <td><input type="checkbox" class="lang-check" data-lang="Bangla" data-skill="Write"></td>
+                            <td><input type="checkbox" class="lang-check" data-lang="Bangla" data-skill="Speak"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section-header"><i class="fas fa-university"></i> KYC & Banking Details</div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label>PAN Card Number</label>
+                    <input type="text" id="panNo" class="form-control check-db uppercase" data-field="kyc.pan" required>
+                </div>
+                <div class="col-md-4">
+                    <label>Bank Account Number</label>
+                    <input type="text" id="acNo" class="form-control check-db" data-field="bank.accNo" required>
+                </div>
+                <div class="col-md-4">
+                    <label>IFSC Code</label>
+                    <input type="text" id="ifsc" class="form-control uppercase" required>
+                </div>
+            </div>
+
+            <div class="section-header"><i class="fas fa-video"></i> Live Photo Verification</div>
+            <div class="row g-3">
+                <div class="col-md-6 text-center">
+                    <p class="small text-gold">1. Profile Photo</p>
+                    <div class="camera-box">
+                        <video id="v1" autoplay playsinline></video>
+                        <canvas id="c1" style="display:none;"></canvas>
+                        <img id="i1" class="preview-img" style="display:none;">
+                        <button type="button" class="btn btn-xs btn-warning mt-2" onclick="startCam('v1')">Start</button>
+                        <button type="button" class="btn btn-xs btn-light mt-2" onclick="snap('v1','c1','i1')">Capture</button>
+                    </div>
+                </div>
+                <div class="col-md-6 text-center">
+                    <p class="small text-gold">2. Selfie with PAN Card</p>
+                    <div class="camera-box">
+                        <video id="v2" autoplay playsinline></video>
+                        <canvas id="c2" style="display:none;"></canvas>
+                        <img id="i2" class="preview-img" style="display:none;">
+                        <button type="button" class="btn btn-xs btn-warning mt-2" onclick="startCam('v2')">Start</button>
+                        <button type="button" class="btn btn-xs btn-light mt-2" onclick="snap('v2','c2','i2')">Capture</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="subBtn" class="btn-submit w-100 mt-4">REGISTER NOW</button>
+        </form>
+    </div>
+</div>
+
+<script type="module" src="js/worker_reg.js"></script>
+</body>
+</html>
